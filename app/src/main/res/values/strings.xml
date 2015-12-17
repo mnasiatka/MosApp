@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">MosApp</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="app_id">929641387119529</string>
+    <string name="client_id">3c1cafe50e1e47aa891ae09c4a2403d7</string>
+    <string name="client_secret">04561de2472e45568805bab8e27eaf69</string>
+    <string name="redirect_uri">http://finalproject.com</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_horizontal_list_view_demo">HorizontalListViewDemo</string>
+    <string name="title_activity_image_chooser">ImageChooserActivity</string>
+    <string name="title_activity_zoom_in_zoom_out">ZoomInZoomOut</string>
+    <string name="title_activity_testing_recycler">TestingRecyclerActivity</string>
+    <string name="title_activity_adjust_settings">AdjustSettingsActivity</string>
+    <string name="title_activity_final">FinalActivity</string>
+    <string name="title_activity_testing_signature">TestingSignatureActivity</string>
+</resources>

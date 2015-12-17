@@ -1,0 +1,123 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#000"
+                tools:context=".MainActivity">
+
+    <HorizontalScrollView
+        android:id="@+id/hscrollview"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_marginTop="10dp">
+
+        <LinearLayout
+            android:id="@+id/llImages"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </HorizontalScrollView>
+
+    <LinearLayout
+        android:id="@+id/seekbar"
+        android:layout_below="@id/base_image"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:id="@+id/ll"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp">
+
+        <Button
+            android:id="@+id/fb_images"
+            android:layout_below="@id/seekbar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:background="@drawable/fb_icon" />
+
+        <Button
+            android:id="@+id/flickr_button"
+            android:layout_below="@id/seekbar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:background="@drawable/fr_icon"/>
+
+        <Button
+            android:id="@+id/instagram_button"
+            android:layout_below="@id/seekbar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:background="@drawable/ig_icon"/>
+        <Button
+            android:id="@+id/button"
+            android:layout_below="@id/seekbar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:background="@drawable/sr_icon"/>
+        <Button
+            android:id="@+id/choose_images"
+            android:layout_below="@id/seekbar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:background="@drawable/gl_icon"/>
+
+    </LinearLayout>
+
+
+
+    <com.facebook.login.widget.LoginButton
+        android:id="@+id/login_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ll" />
+
+    <TextView
+        android:id="@+id/searchfor"
+        android:text="Nothing searched for yet!"
+        android:layout_below="@id/login_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
+
+    <com.finalproject.mosapp.HorizontalListView
+        android:id="@+id/hlistview"
+        android:layout_below="@id/login_button"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:background="#ddd" />
+
+    <Button
+        android:id="@+id/search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Bulid it!!"
+        android:layout_above="@+id/ll"
+        android:layout_marginTop="10dp" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/list"
+        android:layout_alignParentTop="true"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/search"
+        android:background="#000" />
+
+</RelativeLayout>
