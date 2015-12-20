@@ -16,6 +16,10 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 
@@ -154,6 +158,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
                     Log.e("EVENT", "reached " +
                             "callback!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     imageView.setImageBitmap(builder.getStitched());
+                    builder.getStitched();
                 }
             };
             Log.e("Size", seekBar.getProgress() + "");
@@ -163,5 +168,22 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
             builder.execute();
 
         }
+    }
+
+    private String writeFile(Bitmap bmp) {
+        File outputDir = getCacheDir(); // context being the Activity pointer
+        String path = "";
+        try {
+            File outputFile = File.createTempFile("tempPic", ".jpg", outputDir);
+            path = outputFile.getAbsolutePath();
+            System.out.println("output path: " + path);
+            OutputStream outStream = new FileOutputStream(outputFile);
+            bmp.compress(Bitmap.CompressFormat.PNG, 85, outStream);
+            outStream.flush();
+            outStream.close();
+        } catch (IOException e) {
+            System.out.println("Error writing file");
+        }
+        return path;
     }
 }

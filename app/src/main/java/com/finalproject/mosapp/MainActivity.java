@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String TAG = "DEBUG";
     private static final String CLIENT_ID = "3c1cafe50e1e47aa891ae09c4a2403d7";
     private static final String CLIENT_SECRET = "04561de2472e45568805bab8e27eaf69";
-    private static final String CALLBACK_URL = "http://finalproject.com";
+    private static final String CALLBACK_URL = "http://ythogh.com";
     private static final String SHARED = "Instagram_Preferences";
     private static final String API_USERNAME = "username";
     private static final String API_ID = "id";

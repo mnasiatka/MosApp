@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,7 +30,8 @@ public class MosaicBuilder {
     int nRows = 100, nCols = 100;
     int listviewImageSize = 85;
     Context mContext;
-    int isCalculating = 0;
+    int isCalculatingDistnace = 0;
+    int isCalculatingRGB = 0;
     int source = -1;
     Bitmap outputBitmap;
     Worker worker;
@@ -115,7 +115,7 @@ public class MosaicBuilder {
         resizeBaseImage();
 
         sliceBase();
-        readImages();
+        compDist();
     }
 
     private void sliceBase() {
@@ -136,14 +136,6 @@ public class MosaicBuilder {
         System.out.println(baseSplit.size());
     }
 
-    private void readImages() {
-        System.out.println("reading images");
-        System.out.println(source);
-
-        compDist();
-        System.out.println("finished reading images");
-    }
-
     private void getImagesFromURLs() {
         System.out.println("getting images from URLs");
         dirImages = new ArrayList<>();
@@ -154,41 +146,12 @@ public class MosaicBuilder {
     }
 
     private void compDist() {
-        System.out.println("computing distances");
         // calc avg rgb for each directory image
         // [image Index][channel]
-        int p, R, G, B, imgWidth, imgHeight, num;
-        int index = 0;
         dirImageAverages = new float[dirImages.size()][3];
-
-
-        for (Bitmap dirImage : dirImages) {
-            R = G = B = 0;
-            imgWidth = dirImage.getWidth();
-            imgHeight = dirImage.getHeight();
-            num = imgHeight * imgWidth;
-            Log.e("Image", dirImage.toString() + ": " + imgWidth + ", " + imgHeight);
-            for (int i = 0; i < imgWidth; i++) {
-                for (int j = 0; j < imgHeight; j++) {
-                    //Log.e("Dimension", i + ", " + j);
-                    p = dirImage.getPixel(i, j);
-                    R += (p >> 16) & 0xff;
-                    G += (p >> 8) & 0xff;
-                    B += p & 0xff;
-                }
-            }
-            dirImageAverages[index][0] = R / (float) num;
-            dirImageAverages[index][1] = G / (float) num;
-            dirImageAverages[index][2] = B / (float) num;
-            index++;
+        for(int i=0;i<dirImages.size();i++) {
+            new ComputeDistances(i).execute();
         }
-        resultingComparisonDistance = new int[nRows * nCols];
-        for (int i = 0; i < baseSplit.size(); i++) {
-            //System.out.println("Starting to compare image at " + i);
-            new CompareDistances(i).execute();
-        }
-        //System.out.println("Finished sending comparisons. Waiting for it to finish");
-
     }
 
     private void stitchImages() {
@@ -241,7 +204,6 @@ public class MosaicBuilder {
      */
     private void blend() {
         System.out.println("blending images");
-        Toast.makeText(mContext, "Called now on index " + isCalculating, Toast.LENGTH_SHORT).show();
         double weight = 1f - (0.51605 * Math.exp(-0.031596 * dirImages.size()));
         //System.out.println(baseImage == null);
         //System.out.println(stitched == null);
@@ -303,11 +265,65 @@ public class MosaicBuilder {
          */
     }
 
-    private void onFinishedCalculation() {
-        isCalculating++;
+    private void onFinishedDistanceComparison() {
+        isCalculatingDistnace++;
         //System.out.println("Finished " + isCalculating);
-        if (isCalculating == (nRows * nCols)) {
+        if (isCalculatingDistnace == (nRows * nCols)) {
             stitchImages();
+        }
+    }
+
+    private void onFinishedRGBComputation() {
+        isCalculatingRGB++;
+        //System.out.println("Finished " + isCalculating);
+        if (isCalculatingRGB == (dirImages.size())) {
+            resultingComparisonDistance = new int[nRows * nCols];
+            for (int i = 0; i < baseSplit.size(); i++) {
+                new CompareDistances(i).execute();
+            }
+        }
+    }
+
+    private class ComputeDistances extends AsyncTask<Integer, Void, Void> {
+
+        int index;
+
+        // calc avg rgb for each directory image
+        // [image Index][channel]
+        public ComputeDistances(int index) {
+            this.index = index;
+        }
+
+        @Override
+        protected Void doInBackground(Integer... params) {
+            int p, R, G, B, imgWidth, imgHeight, num;
+            R = G = B = 0;
+            Bitmap dirImage;
+
+            dirImage = dirImages.get(index);
+            dirImage = Bitmap.createScaledBitmap(dirImage, cellWidth,cellHeight,true);
+            dirImages.set(index, dirImage);
+            imgWidth = dirImage.getWidth();
+            imgHeight = dirImage.getHeight();
+            num = imgHeight * imgWidth;
+            //Log.e("Image", dirImage.toString() + ": " + imgWidth + ", " + imgHeight);
+            for (int col = 0; col < imgWidth; col++) {
+                for (int row = 0; row < imgHeight; row++) {
+                    p = dirImage.getPixel(col, row);
+                    R += (p >> 16) & 0xff;
+                    G += (p >> 8) & 0xff;
+                    B += p & 0xff;
+                }
+            }
+            dirImageAverages[index][0] = R / (float) num;
+            dirImageAverages[index][1] = G / (float) num;
+            dirImageAverages[index][2] = B / (float) num;
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            onFinishedRGBComputation();
         }
     }
 
@@ -359,7 +375,7 @@ public class MosaicBuilder {
         protected void onPostExecute(Integer smallestDistanceIndex) {
             resultingComparisonDistance[imageIndex] = smallestDistanceIndex;
             //System.out.println("Just finished index " + imageIndex);
-            onFinishedCalculation();
+            onFinishedDistanceComparison();
         }
     }
 
