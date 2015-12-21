@@ -366,15 +366,6 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
     }
 
     private void gridImageHandler(Bitmap bmp) {
-        dirImages2.add(bmp);
-        View v = new ImageView(getBaseContext());
-        ImageView imgView;
-        imgView = new ImageView(v.getContext());
-        imgView.setImageBitmap(bmp);
-        imgView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        imgView.setAdjustViewBounds(true);
-
-        includePhoto.add(adapter.getItemCount());
         adapter.add(bmp, adapter.getItemCount());
     }
 

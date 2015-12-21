@@ -366,14 +366,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void gridImageHandler(Bitmap bmp) {
-       // dirImages2.add(bmp);
-        View v = new ImageView(getBaseContext());
-        ImageView imgView;
-        imgView = new ImageView(v.getContext());
-        imgView.setImageBitmap(bmp);
-        imgView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        imgView.setAdjustViewBounds(true);
-
         adapter.add(bmp, adapter.getItemCount());
     }
 
@@ -707,7 +699,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String filePath = cursor.getString(columnIndex);
                 cursor.close();
                 imageBitmap = BitmapFactory.decodeFile(filePath);
-                System.out.println("base image size in main activity 1: " + imageBitmap.getHeight() + ", " + imageBitmap.getWidth());
                 try {
                     int o = resolveBitmapOrientation(new File(filePath));
                     imageBitmap = applyOrientation(imageBitmap, o);
@@ -733,7 +724,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         .getHeight());
                 fs = filePath.split(".jpg");
                 newFilePath = fs[0] + "_compressed.jpg";
-                System.out.println(newFilePath);
                 try {
                     FileOutputStream out = new FileOutputStream(newFilePath);
                     imageFile = new File(newFilePath);
@@ -743,8 +733,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                ivBaseImage.setImageBitmap(imageBitmap);
-                ivBaseImage.requestLayout();
+                gridImageHandler(imageBitmap);
             } else if (requestCode == TAKE_PHOTO) {
                 //Bundle extras = imageReturnedIntent.getExtras();
                 //bmp = (Bitmap) extras.get("data");
@@ -773,8 +762,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     e.printStackTrace();
                 }
 
-                ivBaseImage.setImageBitmap(imageBitmap);
-                ivBaseImage.requestLayout();
+                gridImageHandler(imageBitmap);
             } else if (requestCode == CHOOSE_MULTIPLE_PHOTOS) {
                 Toast.makeText(getApplicationContext(), "Returned from choosing multiple " +
                         "photos!", Toast.LENGTH_LONG).show();
@@ -784,12 +772,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     try {
                         ClipData.Item item = cp.getItemAt(0);
-                        bmp = MediaStore.Images.Media.getBitmap(this.getContentResolver(), item
+                        imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), item
                                 .getUri());
                         //imageBitmap = Bitmap.createScaledBitmap(bmp, 150, 150, false);
                         //ivBaseImage.setImageBitmap(imageBitmap);
-                        ivBaseImage.setImageBitmap(bmp);
-                        ivBaseImage.requestLayout();
+                        gridImageHandler(imageBitmap);
                         Log.e("ClipData Item", item.getUri().toString());
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -799,10 +786,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Log.e("null check", "" + (data.getData() == null));
                     if (data.getData() != null) {
                         try {
-                            bmp = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
+                            imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),
+                                    data.getData());
                             //imageBitmap = Bitmap.createScaledBitmap(bmp, 150, 150, false);
-                            ivBaseImage.setImageBitmap(imageBitmap);
-                            ivBaseImage.requestLayout();
+                            gridImageHandler(imageBitmap);
                             Log.e("getData Item", data.getData().toString());
                         } catch (Exception e) {
                             e.printStackTrace();
