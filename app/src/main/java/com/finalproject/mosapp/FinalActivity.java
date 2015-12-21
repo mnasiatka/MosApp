@@ -1,9 +1,12 @@
 package com.finalproject.mosapp;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -14,7 +17,12 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 
 public class FinalActivity extends ActionBarActivity {
@@ -36,17 +44,27 @@ public class FinalActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        System.out.println("initializing final activity");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_final);
 
         getSupportActionBar().setTitle("4. Output image");
 
+        System.out.println("unpacking final activity");
+
         Bundle bundle = getIntent().getExtras();
         byte[] byteArray = bundle.getByteArray("image");
         baseImage = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
 
+        System.out.println("unpacked image final activity");
+
         initViews();
+
+        System.out.println("initialized views");
+
         baseImageHandler();
+
+        System.out.println("handled base image");
 
 
     }
@@ -112,5 +130,37 @@ public class FinalActivity extends ActionBarActivity {
 
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void writeFile(Bitmap bmp)
+    {
+
+
+        try {
+            String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmm").format(new Date());
+            String path = ("IM_" + timeStamp );
+            String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "mosaic";
+
+            File outputDir= new File(dir);
+
+            outputDir.mkdirs();
+            File newFile = new File(dir+"/"+path+"-"+".jpg");
+            FileOutputStream out = new FileOutputStream(newFile);
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+
+            out.close();
+            System.out.println("saved image to : " + newFile.toString());
+            Intent mediaScanIntent = new Intent(
+                    Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            Uri contentUri = Uri.fromFile(newFile);
+            mediaScanIntent.setData(contentUri);
+            getApplicationContext().sendBroadcast(mediaScanIntent);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
     }
 }

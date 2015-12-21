@@ -15,20 +15,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <SeekBar
-        android:id="@+id/seekbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <TextView
-        android:id="@+id/textview"
+    <Button
+        android:id="@+id/button"
+        android:text="Save your piece of art :)"
         android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
     <ImageView
-        android:layout_below="@id/seekbar"
-        android:layout_above="@id/textview"
+        android:layout_above="@id/button"
         android:id="@+id/imageview"
         android:adjustViewBounds="true"
         android:scaleType="fitCenter"

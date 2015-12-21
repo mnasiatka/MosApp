@@ -1,9 +1,12 @@
 package com.finalproject.mosapp;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -20,11 +23,14 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 
 public class AdjustSettingsActivity extends AppCompatActivity implements View.OnClickListener {
@@ -39,13 +45,15 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
     Handler mHandler = new Handler();
     SeekBar seekBar, blendseekBar;
     TextView textview, toptextview, blendtextview;
-    CheckBox checkBox;
+    CheckBox checkBox, noneCheckBox;
     ImageView imageView;
     ZoomInZoomOut zoomer;
     Button button;
     MosaicBuilder builder;
     Worker worker;
     double tileSize=50.0;
+    Button saveButton;
+    Bitmap output_image;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,12 +89,12 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
 
     private void initViews() {
         progressBar = (ProgressBar) findViewById(R.id.progressbar);
-        //progressBar.setMax(6000);
+        progressBar.setMax(6000);
         seekBar = (SeekBar) findViewById(R.id.seekbar);
-        seekBar.setProgress( (int) tileSize );
+        seekBar.setProgress((int) tileSize);
 
         blendseekBar = (SeekBar) findViewById(R.id.blendseekbar);
-        blendseekBar.setProgress((int) calcOptimalBlend());
+        blendseekBar.setProgress((int) (100.0 - calcOptimalBlend()));
         blendseekBar.setEnabled(false);
 
         textview = (TextView) findViewById(R.id.textview);
@@ -95,15 +103,42 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         imageView = (ImageView) findViewById(R.id.imageview);
         button = (Button) findViewById(R.id.button);
         button.setOnClickListener(this);
+
+        saveButton = (Button) findViewById(R.id.button2);
+        saveButton.setOnClickListener(this);
+
         baseImageHandler();
 
         checkBox = (CheckBox) findViewById(R.id.blendcheckbox);
         checkBox.setChecked(true);
 
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView,boolean isChecked) {
-                blendseekBar.setEnabled(!isChecked);
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        noneCheckBox.setChecked(false);
+                        blendseekBar.setEnabled(false);
+                        blendseekBar.setProgress((int) (100.0 - calcOptimalBlend()));
+                    }
+                    else
+                        blendseekBar.setEnabled(true);
+                }
+            }
+        );
+
+        noneCheckBox = (CheckBox) findViewById(R.id.nonecheckbox);
+        noneCheckBox.setChecked(false);
+
+        noneCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        checkBox.setChecked(false);
+                        blendseekBar.setEnabled(false);
+                        blendseekBar.setProgress(0);
+                    }
+                    else
+                        blendseekBar.setEnabled(true);
                 }
             }
         );
@@ -178,9 +213,19 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
     public void onClick(View v) {
         int id = v.getId();
         tileSize = 100.0  + 1.0* seekBar.getProgress();
-        System.out.println(tileSize);
+        double blendweight = 0.0;
+        if (blendseekBar.isEnabled()) {
+            blendweight = 1- (blendseekBar.getProgress()/100.0);
+        }
+        else
+        {
+            blendweight = calcOptimalBlend()/100.0;
+        }
+
+        System.out.println("bw: " +blendweight);
+        System.out.println("tilesize: " +tileSize);
         if (id == R.id.button) {
-            MosaicBuilderOptions options = new MosaicBuilderOptions(false);
+            MosaicBuilderOptions options = new MosaicBuilderOptions(!noneCheckBox.isChecked());
             worker = new Worker();
             worker.callback = new MyCallback() {
 
@@ -188,39 +233,74 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
                     Log.e("EVENT", "reached " +
                             "callback!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     imageView.setImageBitmap(builder.getStitched());
-                    builder.getStitched();
+                    output_image = builder.getStitched();
+
+//                    Intent intent = new Intent(getApplicationContext(), FinalActivity.class);
+//
+//                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+//                    output_image.compress(Bitmap.CompressFormat.PNG, 100, stream);
+//                    byte[] byteArray = stream.toByteArray();
+//                    intent.putExtra("image", byteArray);
+//                    System.out.println("starting final activity");
+//                    startActivity(intent);
+//                    System.out.println("started activity");
                 }
             };
             Log.e("Size", seekBar.getProgress() + "");
-            builder = new MosaicBuilder(getApplicationContext(),  tileSize ,baseImage,dirImages,
+            builder = new MosaicBuilder(getApplicationContext(),  tileSize ,baseImage, blendweight, dirImages,
                     worker);
             builder.setOptions(options);
             builder.execute();
+        }
+
+        else if (id == R.id.button2) {
+            if(output_image == null)
+            {
+                System.out.println("bitmap is null");
+            }
+            else {
+                writeFile(output_image);
+            }
 
         }
-    }
-
-
-
-    private String writeFile(Bitmap bmp) {
-        File outputDir = getCacheDir(); // context being the Activity pointer
-        String path = "";
-        try {
-            File outputFile = File.createTempFile("tempPic", ".jpg", outputDir);
-            path = outputFile.getAbsolutePath();
-            System.out.println("output path: " + path);
-            OutputStream outStream = new FileOutputStream(outputFile);
-            bmp.compress(Bitmap.CompressFormat.PNG, 85, outStream);
-            outStream.flush();
-            outStream.close();
-        } catch (IOException e) {
-            System.out.println("Error writing file");
-        }
-        return path;
     }
 
     private double calcOptimalBlend()
     {
         return 100.0* (1f - (0.51605 * Math.exp(-0.031596 * dirImages.size())) );
+    }
+
+
+    private void writeFile(Bitmap bmp)
+    {
+
+
+        try {
+            String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmm").format(new Date());
+            String path = ("IM_" + timeStamp );
+            String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "mosaic";
+
+            File outputDir= new File(dir);
+
+            outputDir.mkdirs();
+            File newFile = new File(dir+"/"+path+"-"+".jpg");
+            FileOutputStream out = new FileOutputStream(newFile);
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+
+            out.close();
+            System.out.println("saved image to : " + newFile.toString());
+
+            Intent mediaScanIntent = new Intent(
+                    Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            Uri contentUri = Uri.fromFile(newFile);
+            mediaScanIntent.setData(contentUri);
+            getApplicationContext().sendBroadcast(mediaScanIntent);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
     }
 }

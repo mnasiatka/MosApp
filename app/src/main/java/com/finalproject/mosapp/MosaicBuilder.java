@@ -36,8 +36,9 @@ public class MosaicBuilder {
     Bitmap outputBitmap;
     Worker worker;
     MosaicBuilderOptions options;
+    double weight;
 
-    public MosaicBuilder(Context mContext, Double size, Bitmap baseImage, ArrayList
+    public MosaicBuilder(Context mContext, Double size, Bitmap baseImage, double weight, ArrayList
             arrList) {
         System.out.println("Building mosaic");
         this.dirImages = arrList;
@@ -45,6 +46,7 @@ public class MosaicBuilder {
         this.baseSplit = new ArrayList<>();
         this.mContext = mContext;
         this.baseImage = baseImage;
+        this.weight = weight;
 
         System.out.println("base image size in build mosaic: " + baseImage.getHeight() + ", " + baseImage.getWidth());
 
@@ -52,21 +54,21 @@ public class MosaicBuilder {
         nCols = (int) Math.round(size);
     }
 
-    public MosaicBuilder(Context mContext, Double size, Bitmap baseImage, ArrayList
-            arrList, Worker worker) {
-        this(mContext,size,baseImage,arrList);
+    public MosaicBuilder(Context mContext, Double size, Bitmap baseImage, double weight, ArrayList
+            arrList , Worker worker) {
+        this(mContext,size,baseImage, weight, arrList);
         this.worker = worker;
     }
 
-    public MosaicBuilder(Context mContext, int size, Bitmap baseImage, ArrayList
+    public MosaicBuilder(Context mContext, int size, Bitmap baseImage, double weight, ArrayList
             arrList, Worker worker) {
-        this(mContext,new Double(size),baseImage,arrList);
+        this(mContext,new Double(size),baseImage, weight, arrList);
         this.worker = worker;
     }
 
-    public MosaicBuilder(Context mContext, int size, Bitmap baseImage, ArrayList
+    public MosaicBuilder(Context mContext, int size, Bitmap baseImage, double weight, ArrayList
             arrList) {
-        this(mContext,new Double(size),baseImage,arrList);
+        this(mContext,new Double(size),baseImage, weight, arrList);
         this.worker = worker;
     }
 
@@ -182,6 +184,7 @@ public class MosaicBuilder {
             blend();
         } else {
             onFinishedBuilding();
+
         }
     }
 
@@ -203,8 +206,9 @@ public class MosaicBuilder {
      * Robustified optimal weighting algorithm introduced by Nasiatka, Nasiatka et al. 2015
      */
     private void blend() {
+        double weight = this.weight;
+        System.out.println("blending weight: " +weight);
         System.out.println("blending images");
-        double weight = 1f - (0.51605 * Math.exp(-0.031596 * dirImages.size()));
         //System.out.println(baseImage == null);
         //System.out.println(stitched == null);
         baseImage = Bitmap.createBitmap(baseImage, 0, 0, stitched.getWidth(), stitched.getHeight());
@@ -234,35 +238,6 @@ public class MosaicBuilder {
         //MainActivity3.imageView.setImage(ImageSource.bitmap(stitched));
         onFinishedBuilding();
 
-    }
-
-    private String writeFile(Bitmap bmp) {
-        File outputDir = mContext.getCacheDir(); // context being the Activity pointer
-        String path = "";
-        try {
-            File outputFile = File.createTempFile(fileName, ".jpg", outputDir);
-            path = outputFile.getAbsolutePath();
-            System.out.println("output path: " + path);
-            OutputStream outStream = null;
-            outStream = new FileOutputStream(outputFile);
-            bmp.compress(Bitmap.CompressFormat.PNG, 85, outStream);
-            outStream.flush();
-            outStream.close();
-        } catch (IOException e) {
-            System.out.println("Error writing file");
-        }
-
-        return path;
-
-    }
-
-    private void beforeAfter() {
-        /*
-        new = np.zeros([output.shape[0], 1+int(output.shape[1]*2), 3])
-        new[:, 0:output.shape[1],:] = base[:output.shape[0], :output.shape[1], :]
-        new[:, output.shape[1]+1:,:] = output
-        return new
-         */
     }
 
     private void onFinishedDistanceComparison() {
