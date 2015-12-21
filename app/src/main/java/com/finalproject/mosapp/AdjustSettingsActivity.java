@@ -2,7 +2,6 @@ package com.finalproject.mosapp;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
@@ -50,6 +49,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
     double tileSize=50.0;
     Button saveButton;
     Bitmap output_image;
+    String baseImageURI = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,8 +59,9 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         getSupportActionBar().setTitle("3. Adjust settings");
 
         Bundle bundle = getIntent().getExtras();
-        byte[] baseArray = bundle.getByteArray("image");
-        baseImage = BitmapFactory.decodeByteArray(baseArray, 0, baseArray.length);
+        //byte[] baseArray = bundle.getByteArray("image");
+        //baseImage = BitmapFactory.decodeByteArray(baseArray, 0, baseArray.length);
+        baseImageURI = bundle.getString("URI");
         //float[] mValues = bundle.getFloatArray("matrix");
         //matrix = new Matrix();
         //matrix.setValues(mValues);

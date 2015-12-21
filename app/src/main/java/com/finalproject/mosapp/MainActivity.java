@@ -129,6 +129,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     RecyclerView recyclerView;
     MainAdapter adapter;
+    ArrayList<String> photoURIs;
     public static Matrix matrix, savedMatrix;
 
     int expectedSize = 25;
@@ -230,6 +231,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void resetRecyclerView() {
         photoUrls = new ArrayList<>();
         dirImages = new ArrayList<>();
+        photoURIs = new ArrayList<>();
 
         adapter = new MainAdapter(this, new ArrayList());
         recyclerView.setAdapter(adapter);
@@ -283,22 +285,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mLoginButton.callOnClick();
         } else {
             // Gets profile picture
-            System.out.println("****************************************************");
-            Log.e("Application ID", at.getApplicationId());
-            Log.e("Token", at.getToken());
-            Log.e("User ID", at.getUserId());
-            Log.e("Access Token", at.toString());
-            Log.e("Expires", at.getExpires().toString());
-            for (String s : at.getPermissions()) {
-                Log.e("Permissions", s);
-            }
-            for (String s : at.getDeclinedPermissions()) {
-                Log.e("Declined Permissions", s);
-            }
-            System.out.println("****************************************************");
-            Log.e("Facebook", "Starting to get profile info and picture");
             String profileURL = String.format("/%s/picture", at.getUserId());
-            final long start_time = System.nanoTime();
             GraphRequest request = new GraphRequest(
                     AccessToken.getCurrentAccessToken(),
                     profileURL,
@@ -307,10 +294,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     new GraphRequest.Callback() {
                         public void onCompleted(GraphResponse response) {
                             try {
-                                Log.d(TAG, response.getConnection().getURL().toString());
-                                long end_time = System.nanoTime();
-                                double difference = (end_time - start_time) / 1e9;
-                                Log.e("Time", "It took " + difference + " s to retrieve this data.");
                                 baseImageHandler(response.getConnection().getURL().toString());
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -337,14 +320,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 if (response == null) {
                                     Log.e(TAG, "Response is null");
                                 } else {
-                                    Log.d(TAG, response.getConnection().getURL().toString());
                                     JSONArray arr = response.getJSONObject().getJSONArray
                                             ("data");
+                                    System.out.println(arr);
                                     String photoID = "";
                                     numPhotoIDs = arr.length();
                                     for (int i = 0; i < arr.length(); i++) {
                                         photoID = arr.getJSONObject(i).getString("id");
-                                        Log.e("PhotoID", "Index " + i + " produced " + photoID);
                                         GraphRequest request = new GraphRequest(
                                                 AccessToken.getCurrentAccessToken(),
                                                 photoID,
@@ -354,8 +336,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                     public void onCompleted(GraphResponse response) {
                                                         try {
                                                             String photoURL = response.getJSONObject().getString("picture");
-                                                            Log.d(TAG, photoUrls.size() + ":"
-                                                                    + photoURL);
                                                             gridImageHandler(photoURL);
                                                         } catch (Exception e) {
                                                             e.printStackTrace();
@@ -365,6 +345,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         );
                                         Bundle parameters = new Bundle();
                                         parameters.putString("fields", "id,name,link,picture");
+                                        parameters.putString("type","large");
                                         request.setParameters(parameters);
                                         request.executeAsync();
                                     }
@@ -403,18 +384,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void gridImageHandler(String url) {
-        photoUrls.add(url);
+        photoURIs.set(adapter.getItemCount(), url);
         imageLoader.loadImage(url, new SimpleImageLoadingListener() {
             @Override
             public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-                //dirImages2.add(loadedImage);
+                Log.e(imageUri, loadedImage.getWidth() + ", " + loadedImage.getHeight());
                 adapter.add(loadedImage, adapter.getItemCount());
             }
         });
-
-        Log.e("Null check", "adapter is null: " + (adapter == null));
-
-
         //adapter.add(((BitmapDrawable) imgView.getDrawable()).getBitmap(), adapter.getItemCount());
     }
 
@@ -527,29 +504,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 imageBitmap = ((BitmapDrawable)((ImageView)recyclerView.getChildAt(selectedPhoto)
                         .findViewById(R.id.image)).getDrawable()).getBitmap();
                 System.out.println("base image size in main activity 1: " + imageBitmap.getHeight() + ", " + imageBitmap.getWidth());
-                if (imageBitmap != null && zoomer != null) {
-                    matrix = zoomer.getMatrix();
-                    savedMatrix = zoomer.getSavedMatrix();
-
-                    Log.d("Display", "Matrix");
-                    visualMatrix(matrix);
-                    Log.d("Display", "Saved matrix");
-                    visualMatrix(savedMatrix);
-
-                    Intent i = new Intent(getApplicationContext(), MainActivity2.class);
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                    byte[] byteArray = stream.toByteArray();
-                    i.putExtra("image", byteArray);
-                    startActivity(i);
-                } else if (imageBitmap != null) {
-                    Intent i = new Intent(getApplicationContext(), MainActivity2.class);
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                    byte[] byteArray = stream.toByteArray();
-                    i.putExtra("image", byteArray);
-                    startActivity(i);
-                }
+                Intent i = new Intent(getApplicationContext(), MainActivity2.class);
+                i.putExtra("URI",photoURIs.get(selectedPhoto));
+                //ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                //imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                //byte[] byteArray = stream.toByteArray();
+                //i.putExtra("image", byteArray);
+                startActivity(i);
                 break;
             case R.id.choose_images:
                 resetRecyclerView();

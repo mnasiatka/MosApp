@@ -144,6 +144,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
     getInstagramInfo IGasync;
     GraphRequest FBasync;
 
+    String baseImageURI = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,20 +158,16 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
         dirImages = new ArrayList<>();
         dirImages2 = new ArrayList<>();
 
-
         getSupportActionBar().setTitle("2. Choose smaller photos");
 
         //matrix = MainActivity.matrix;
         //matrix.getValues(mValues);
         Toast.makeText(getApplicationContext(), "Main Activity 2", Toast.LENGTH_SHORT).show();
         try {
-            byte[] byteArray = getIntent().getByteArrayExtra("image");
-            imageBitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-            //ivBaseImage.setImageBitmap(imageBitmap);
-            //ivBaseImage.setImageMatrix(matrix);
+            //byte[] byteArray = getIntent().getByteArrayExtra("image");
+            //imageBitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+            baseImageURI = getIntent().getExtras().getString("URI");
 
-            // Log.e("Width", "" + ivBaseImage.getWidth());
-            // Log.e("Height", "" + ivBaseImage.getHeight());
         } catch (Exception e) {
             e.printStackTrace();
             finish();
@@ -608,12 +605,11 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
 
                 Intent intent = new Intent(getApplicationContext(), AdjustSettingsActivity.class);
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                byte[] byteArray = stream.toByteArray();
-                intent.putExtra("image", byteArray);
-                //int[] includeArray = includeSetToArray();
-                //intent.putExtra("include", includeArray);
-                //intent.putExtra("matrix", mValues);
+                //imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                //byte[] byteArray = stream.toByteArray();
+                //intent.putExtra("image", byteArray);
+
+                intent.putExtra("URI", baseImageURI);
 
                 imagesToUse = new ArrayList<>(includePhoto.size());
                 ByteArrayOutputStream dirStream = new ByteArrayOutputStream();
