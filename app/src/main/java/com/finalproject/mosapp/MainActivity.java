@@ -94,6 +94,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static int USING_FACEBOOK = 1;
     public static int USING_FLICKR = 2;
     public static int USING_GALLERY = 3;
+    public static int USING_URLS = 0;
+    public static int USING_BITMAPS = 1;
+
 
     public static ImageView ivBaseImage;
     private ZoomInZoomOut zoomer;
@@ -135,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int TAKE_PHOTO = 1;
     int CHOOSE_PHOTO = 2;
     int CHOOSE_MULTIPLE_PHOTOS = 3;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -499,6 +503,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 System.out.println("base image size in main activity 1: " + imageBitmap.getHeight() + ", " + imageBitmap.getWidth());
                 Intent i = new Intent(getApplicationContext(), MainActivity2.class);
                 i.putExtra("URI",photoURIs.get(selectedPhoto));
+                i.putExtra("source", source);
                 //ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 //imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
                 //byte[] byteArray = stream.toByteArray();
@@ -512,18 +517,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
                 startActivityForResult(intent, CHOOSE_MULTIPLE_PHOTOS);
-                source = USING_GALLERY;
+                source = USING_BITMAPS;
                 onImageChosen();
                 break;
             case R.id.fb_images:
                 resetRecyclerView();
                 getFacebookData();
+                source = USING_URLS;
                 onImageChosen();
                 //new getFacebookData().execute();
                 break;
             case R.id.instagram_button:
                 resetRecyclerView();
                 useInstagram();
+                source = USING_URLS;
                 onImageChosen();
                 break;
             case R.id.test:
