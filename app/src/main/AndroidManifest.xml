@@ -46,7 +46,6 @@
         <activity android:name=".ImageChooserActivity" />
         <activity android:name=".MainActivity2" />
         <activity android:name=".CropImageActivity" />
-        <activity android:name=".AnimatorSampleActivity" />
         <activity
             android:name=".AdjustSettingsActivity"
             android:label="@string/title_activity_adjust_settings" >

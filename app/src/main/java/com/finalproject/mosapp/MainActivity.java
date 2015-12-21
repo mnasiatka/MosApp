@@ -18,6 +18,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -26,6 +29,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.animation.OvershootInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -50,6 +54,7 @@ import com.facebook.login.widget.LoginButton;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -64,7 +69,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -117,8 +124,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     String baseImageUrl = "";
     GraphRequest FBasync;
     ImageLoader imageLoader;
-    public static Set<Integer> includePhoto;
+    public int selectedPhoto;
+    public View selectedView;
 
+    RecyclerView recyclerView;
+    MainAdapter adapter;
     public static Matrix matrix, savedMatrix;
 
     int expectedSize = 25;
@@ -133,6 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
         ImageLoader.getInstance().init(config);
+        imageLoader = ImageLoader.getInstance();
         initViews();
 
         btAddTags.setVisibility(View.GONE);
@@ -197,14 +208,64 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.e(TAG, exception.toString());
             }
         });
+
+        recyclerView = (RecyclerView) findViewById(R.id.list);
+
+        if (getIntent().getBooleanExtra("GRID", true)) {
+            recyclerView.setLayoutManager(new GridLayoutManager(this, 3));
+        } else {
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        }
+
+        recyclerView.setItemAnimator(new FadeInAnimator());
+
+        resetRecyclerView();
+
+        recyclerView.setItemAnimator(new FadeInAnimator(new OvershootInterpolator(1f)));
+        recyclerView.getItemAnimator().setAddDuration(500);
+        recyclerView.getItemAnimator().setRemoveDuration(500);
+
     }
 
     private void resetRecyclerView() {
         photoUrls = new ArrayList<>();
         dirImages = new ArrayList<>();
-        dirImages2 = new ArrayList<>();
 
-        setupAdapter();
+        adapter = new MainAdapter(this, new ArrayList());
+        recyclerView.setAdapter(adapter);
+        selectedPhoto = -1;
+
+        recyclerView.addOnItemTouchListener(
+                new RecyclerItemClickListener(getApplicationContext(), new RecyclerItemClickListener
+                        .OnItemClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        if (selectedView != null) {
+                            ImageView selectedPhotoInclude = (ImageView) selectedView.findViewById(R.id
+                                    .include);
+                            ImageView selectedPhotoImage = (ImageView) selectedView.findViewById(R.id.image);
+                            //selectedPhotoInclude.setImageResource(R.drawable.xcheck);
+                            selectedPhotoInclude.setVisibility(View.GONE);
+                            selectedPhotoImage.setAlpha(.7f);
+                        }
+                        ImageView include = (ImageView) view.findViewById(R.id.include);
+                        ImageView image = (ImageView) view.findViewById(R.id.image);
+                        if (selectedPhoto == position ) { // already checked, remove and show x
+                            include.setImageResource(R.drawable.xcheck);
+                            include.setVisibility(View.GONE);
+                            image.setAlpha(.7f);
+                            selectedPhoto = -1;
+                        } else { // not being shown, add to set and show check
+                            include.setImageResource(R.drawable.check2);
+                            image.setAlpha(1f);
+                            include.setVisibility(View.VISIBLE);
+                            selectedPhoto = position;
+                        }
+                        selectedView = view;
+                        Log.e("Selected photo", "" + position);
+                    }
+                })
+        );
     }
 
     private void baseImageHandler(String url) {
@@ -332,7 +393,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imgView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         imgView.setAdjustViewBounds(true);
 
-        includePhoto.add(adapter.getItemCount());
         adapter.add(bmp, adapter.getItemCount());
     }
 
@@ -348,7 +408,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
                 //dirImages2.add(loadedImage);
-                includePhoto.add(adapter.getItemCount());
                 adapter.add(loadedImage, adapter.getItemCount());
             }
         });
@@ -465,8 +524,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 add.show();
                 break;
             case R.id.next:
-
-                imageBitmap = ((BitmapDrawable) ivBaseImage.getDrawable()).getBitmap();
+                imageBitmap = ((BitmapDrawable)((ImageView)recyclerView.getChildAt(selectedPhoto)
+                        .findViewById(R.id.image)).getDrawable()).getBitmap();
                 System.out.println("base image size in main activity 1: " + imageBitmap.getHeight() + ", " + imageBitmap.getWidth());
                 if (imageBitmap != null && zoomer != null) {
                     matrix = zoomer.getMatrix();
@@ -493,6 +552,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case R.id.choose_images:
+                resetRecyclerView();
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setType("image/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -502,13 +562,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 onImageChosen();
                 break;
             case R.id.fb_images:
-                source = USING_FACEBOOK;
+                resetRecyclerView();
                 getFacebookData();
                 onImageChosen();
                 //new getFacebookData().execute();
                 break;
             case R.id.instagram_button:
-                source = USING_INSTAGRAM;
+                resetRecyclerView();
                 useInstagram();
                 onImageChosen();
                 break;
@@ -965,6 +1025,72 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         "Instagram. Sorry!", Toast.LENGTH_SHORT).show();
             }
 
+        }
+    }
+
+    public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder> {
+
+        private Context mContext;
+        private Activity mActivity;
+        private List<Bitmap> mDataSet;
+        private Map<Integer,ViewHolder> mHolderSet;
+
+        public MainAdapter(Context context, List<Bitmap> dataSet) {
+            mContext = context;
+            mDataSet = dataSet;
+            mHolderSet = new HashMap<>();
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(mContext).inflate(R.layout.layout_list_item, parent, false);
+            return new ViewHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(final ViewHolder holder, final int position) {
+            Picasso.with(mContext).load(R.drawable.loading).into(holder.image);
+
+            holder.bmp = mDataSet.get(position);
+            holder.image.setImageBitmap(mDataSet.get(position));
+            if (selectedPhoto == position) { // should include, show check
+                holder.include.setImageResource(R.drawable.check2);
+                holder.include.setVisibility(View.VISIBLE);
+                holder.image.setAlpha(1f);
+            } else { // not in include set, show x
+                holder.include.setImageResource(R.drawable.xcheck);
+                holder.include.setVisibility(View.GONE);
+                holder.image.setAlpha(.7f);
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return mDataSet.size();
+        }
+
+        public void remove(int position) {
+            mDataSet.remove(position);
+            notifyItemRemoved(position);
+        }
+
+        public void add(Bitmap bmp, int position) {
+            mDataSet.add(position, bmp);
+            notifyItemInserted(position);
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+
+            public ImageView image, include;
+            public Bitmap bmp;
+            public boolean isChecked;
+
+            public ViewHolder(View itemView) {
+                super(itemView);
+                image = (ImageView) itemView.findViewById(R.id.image);
+                include = (ImageView) itemView.findViewById(R.id.include);
+                isChecked = true;
+            }
         }
     }
 

@@ -56,6 +56,7 @@ import com.facebook.login.widget.LoginButton;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -69,8 +70,11 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class MainActivity2 extends AppCompatActivity implements View.OnClickListener {
@@ -123,8 +127,8 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
     Double minSliderVal = initialMin;
     String minText = "Speed";
     String maxText = "Images";
-    public static Set<Integer> includePhoto;
-    public static ArrayList<Bitmap> imagesToUse;
+    public Set<Integer> includePhoto;
+    public ArrayList<Bitmap> imagesToUse;
 
     int expectedSize = 25;
     //int TAKE_PHOTO = 1;
@@ -1088,5 +1092,70 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
         }
         return str;
     }
+
+    public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder> {
+
+        private Context mContext;
+        private Activity mActivity;
+        private List<Bitmap> mDataSet;
+        private Map<Integer,ViewHolder> mHolderSet;
+
+        public MainAdapter(Context context, List<Bitmap> dataSet) {
+            mContext = context;
+            mDataSet = dataSet;
+            mHolderSet = new HashMap<>();
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(mContext).inflate(R.layout.layout_list_item, parent, false);
+            return new ViewHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(final ViewHolder holder, final int position) {
+            Picasso.with(mContext).load(R.drawable.loading).into(holder.image);
+
+            holder.bmp = mDataSet.get(position);
+            holder.image.setImageBitmap(mDataSet.get(position));
+            if (includePhoto.contains(position)) { // should include, show check
+                holder.include.setImageResource(R.drawable.check2);
+                holder.image.setAlpha(1f);
+            } else { // not in include set, show x
+                holder.include.setImageResource(R.drawable.xcheck);
+                holder.image.setAlpha(.3f);
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return mDataSet.size();
+        }
+
+        public void remove(int position) {
+            mDataSet.remove(position);
+            notifyItemRemoved(position);
+        }
+
+        public void add(Bitmap bmp, int position) {
+            mDataSet.add(position, bmp);
+            notifyItemInserted(position);
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+
+            public ImageView image, include;
+            public Bitmap bmp;
+            public boolean isChecked;
+
+            public ViewHolder(View itemView) {
+                super(itemView);
+                image = (ImageView) itemView.findViewById(R.id.image);
+                include = (ImageView) itemView.findViewById(R.id.include);
+                isChecked = true;
+            }
+        }
+    }
+
 }
 

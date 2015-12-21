@@ -54,11 +54,11 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         //float[] mValues = bundle.getFloatArray("matrix");
         //matrix = new Matrix();
         //matrix.setValues(mValues);
-        dirImages = MainActivity2.imagesToUse;
+        //dirImages = MainActivity2.imagesToUse;
         //includeArray = bundle.getIntArray("include");
         initViews();
         //updateProgressBar();
-        textview.setText("Number of images we're using: " + dirImages.size());
+        //textview.setText("Number of images we're using: " + dirImages.size());
         //baseImage = Bitmap.createBitmap(baseImage, 0,0,baseImage.getWidth(), baseImage
         // .getHeight(), matrix, true);
 
