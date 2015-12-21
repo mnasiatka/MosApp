@@ -12,9 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -23,11 +21,9 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -72,14 +68,10 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         //includeArray = bundle.getIntArray("include");
         initViews();
         //updateProgressBar();
-<<<<<<< HEAD
-        //textview.setText("Number of images we're using: " + dirImages.size());
-=======
         textview.setText("Number of images we're using: " + dirImages.size());
         toptextview.setText("Use Slider to Select Tile Size");
         blendtextview.setText("Set Blend Between Base Image and Tiles");
 
->>>>>>> origin/master
         //baseImage = Bitmap.createBitmap(baseImage, 0,0,baseImage.getWidth(), baseImage
         // .getHeight(), matrix, true);
 
