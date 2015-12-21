@@ -422,21 +422,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
         if (at == null) {
             mLoginButton.callOnClick();
         } else {
-            System.out.println("****************************************************");
-            Log.e("Application ID", at.getApplicationId());
-            Log.e("Token", at.getToken());
-            Log.e("User ID", at.getUserId());
-            Log.e("Access Token", at.toString());
-            Log.e("Expires", at.getExpires().toString());
-            for (String s : at.getPermissions()) {
-                Log.e("Permissions", s);
-            }
-            for (String s : at.getDeclinedPermissions()) {
-                Log.e("Declined Permissions", s);
-            }
-            System.out.println("****************************************************");
             String albumURL = String.format("/%s/photos", at.getUserId());
-            Log.e("Facebook", "Starting to download photo URLs");
             resetScrollView();
             resetRecyclerView();
             FBasync = new GraphRequest(
@@ -450,14 +436,12 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                                 if (response == null) {
                                     Log.e(TAG, "Response is null");
                                 } else {
-                                    Log.d(TAG, response.getConnection().getURL().toString());
                                     JSONArray arr = response.getJSONObject().getJSONArray
                                             ("data");
                                     String photoID = "";
                                     numPhotoIDs = arr.length();
                                     for (int i = 0; i < arr.length(); i++) {
                                         photoID = arr.getJSONObject(i).getString("id");
-                                        Log.e("PhotoID", "Index " + i + " produced " + photoID);
                                         GraphRequest request = new GraphRequest(
                                                 AccessToken.getCurrentAccessToken(),
                                                 photoID,
@@ -478,6 +462,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                                         );
                                         Bundle parameters = new Bundle();
                                         parameters.putString("fields", "id,name,link,picture");
+                                        parameters.putInt("limit",100);
                                         request.setParameters(parameters);
                                         request.executeAsync();
                                     }

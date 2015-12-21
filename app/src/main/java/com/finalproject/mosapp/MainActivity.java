@@ -384,7 +384,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void gridImageHandler(String url) {
-        photoURIs.set(adapter.getItemCount(), url);
+        photoURIs.add(url);
         imageLoader.loadImage(url, new SimpleImageLoadingListener() {
             @Override
             public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
