@@ -54,7 +54,6 @@ import com.facebook.login.widget.LoginButton;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -1040,7 +1039,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, final int position) {
-            Picasso.with(mContext).load(R.drawable.loading).into(holder.image);
+            //Picasso.with(mContext).load(R.drawable.loading).into(holder.image);
 
             holder.bmp = mDataSet.get(position);
             holder.image.setImageBitmap(mDataSet.get(position));
