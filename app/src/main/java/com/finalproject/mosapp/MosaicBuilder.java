@@ -8,10 +8,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 
@@ -108,13 +106,14 @@ public class MosaicBuilder {
     private void resizeBaseImage() {
         System.out.println("resizing base image");
         Log.e("Base Image", "" + (baseImage == null));
-        baseImage = Bitmap.createScaledBitmap(baseImage, Math.round(baseImage.getWidth() * resizeScale), Math.round(baseImage
-                .getHeight() * resizeScale), true);
+        //baseImage = Bitmap.createScaledBitmap(baseImage, Math.round(baseImage.getWidth() *
+        //        resizeScale), Math.round(baseImage
+        //        .getHeight() * resizeScale), true);
     }
 
     public void execute() {
         //loadBaseImage();
-        resizeBaseImage();
+        //resizeBaseImage();
 
         sliceBase();
         compDist();
@@ -122,6 +121,7 @@ public class MosaicBuilder {
 
     private void sliceBase() {
         System.out.println("slicing base image");
+        Log.e("Size", baseImage.getWidth() + ", " + baseImage.getHeight());
         cellWidth = baseImage.getWidth() / nCols;
         cellHeight = baseImage.getHeight() / nRows;
         cellArea = cellHeight * cellWidth;

@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     RecyclerView recyclerView;
     MainAdapter adapter;
-    ArrayList<String> photoURIs;
+    Map<Integer,String> photoURIs;
     public static Matrix matrix, savedMatrix;
 
     int expectedSize = 25;
@@ -231,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void resetRecyclerView() {
         photoUrls = new ArrayList<>();
         dirImages = new ArrayList<>();
-        photoURIs = new ArrayList<>();
+        photoURIs = new HashMap<>();
 
         adapter = new MainAdapter(this, new ArrayList());
         recyclerView.setAdapter(adapter);
@@ -327,6 +327,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     numPhotoIDs = arr.length();
                                     for (int i = 0; i < arr.length(); i++) {
                                         photoID = arr.getJSONObject(i).getString("id");
+                                        final int index = i;
                                         GraphRequest request = new GraphRequest(
                                                 AccessToken.getCurrentAccessToken(),
                                                 photoID,
@@ -336,7 +337,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                     public void onCompleted(GraphResponse response) {
                                                         try {
                                                             String photoURL = response.getJSONObject().getString("picture");
-                                                            gridImageHandler(photoURL);
+                                                            gridImageHandler(index, photoURL);
                                                         } catch (Exception e) {
                                                             e.printStackTrace();
                                                         }
@@ -378,13 +379,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void gridImageHandler(String[] urls) {
-        for (String url : urls) {
-            gridImageHandler(url);
+        for (int i=0;i<urls.length;i++) {
+            gridImageHandler(i,urls[i]);
         }
     }
 
-    private void gridImageHandler(String url) {
-        photoURIs.add(url);
+    private void gridImageHandler(int i,String url) {
+        photoURIs.put(i, url);
         imageLoader.loadImage(url, new SimpleImageLoadingListener() {
             @Override
             public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
@@ -501,6 +502,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 add.show();
                 break;
             case R.id.next:
+                Log.e("Positoin", "sending image url at " + selectedPhoto);
                 imageBitmap = ((BitmapDrawable)((ImageView)recyclerView.getChildAt(selectedPhoto)
                         .findViewById(R.id.image)).getDrawable()).getBitmap();
                 System.out.println("base image size in main activity 1: " + imageBitmap.getHeight() + ", " + imageBitmap.getWidth());
@@ -944,33 +946,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         EditText etAddItem;
     }
 
-    private class getInstagramInfo extends AsyncTask<String, Void, String> {
+
+    private class getInstagramInfo extends AsyncTask<String, Void, String[]> {
 
         public getInstagramInfo() {
         }
 
         @Override
-        protected String doInBackground(String... params) {
+        protected String[] doInBackground(String... params) {
 
-            String response = "";
-            System.out.println("*********************************");
+            String response, photoUrl, profileUrl = "";
+            URL url;
+            HttpURLConnection urlConnection;
+
             try {
-                URL url = new URL(String.format("https://api.instagram" +
+                url = new URL(String.format("https://api.instagram" +
                                 ".com/v1/users/%s/?access_token=%s",
                         INSTAGRAM_USER_ID, INSTAGRAM_ACCESS_TOKEN));
                 System.out.println(url.toString());
-                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.setDoInput(true);
+                urlConnection.connect();
+                response = streamToString(urlConnection.getInputStream());
+                JSONObject obj = new JSONObject(response);
+                profileUrl = obj.getJSONObject("data").getString("profile_picture");
+                urlConnection.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            try {
+                url = new URL(String.format("https://api.instagram" +
+                                ".com/v1/users/%s/media/recent/?access_token=%s",
+                        INSTAGRAM_USER_ID, INSTAGRAM_ACCESS_TOKEN));
+                urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.setDoInput(true);
                 urlConnection.connect();
                 response = streamToString(urlConnection.getInputStream());
                 System.out.println(response);
-                JSONObject obj = new JSONObject(response);
-                String photoUrl = obj.getJSONObject("data").getString("profile_picture");
-                System.out.println(photoUrl);
-                System.out.println("*********************************");
+                JSONArray data = new JSONObject(response).getJSONArray("data");
+                JSONObject obj;
+                String[] photoUrls = new String[data.length() + 1];
+                imageLoader = ImageLoader.getInstance();
+                photoUrls[0] = profileUrl;
+                for (int i = 0; i < data.length(); i++) {
+                    obj = data.getJSONObject(i);
+                    photoUrl = obj.getJSONObject("images").getJSONObject("low_resolution")
+                            .getString("url");
+                    photoUrls[i+1] = photoUrl;
+                }
                 urlConnection.disconnect();
-                return photoUrl;
+                return photoUrls;
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;
@@ -978,16 +1006,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         @Override
-        protected void onPostExecute(String photoUrl) {
-            if (photoUrl != null) {
-                baseImageHandler(photoUrl);
+        protected void onPostExecute(String[] photoUrls) {
+            if (photoUrls != null) {
+                resetRecyclerView();
+                gridImageHandler(photoUrls);
             } else {
                 Toast.makeText(getApplicationContext(), "Couldn't retrieve anything from " +
-                        "Instagram. Sorry!", Toast.LENGTH_SHORT).show();
+                        "instagram. Sorry!", Toast.LENGTH_SHORT).show();
             }
 
         }
     }
+
 
     public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder> {
 

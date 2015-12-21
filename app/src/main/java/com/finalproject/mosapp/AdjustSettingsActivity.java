@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -20,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -65,18 +67,20 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         //byte[] baseArray = bundle.getByteArray("image");
         //baseImage = BitmapFactory.decodeByteArray(baseArray, 0, baseArray.length);
         baseImageURI = bundle.getString("URI");
-        baseImage = getBitmapFromURL(baseImageURI);
+
         //float[] mValues = bundle.getFloatArray("matrix");
         //matrix = new Matrix();
         //matrix.setValues(mValues);
         dirImages = MainActivity2.imagesToUse;
         //includeArray = bundle.getIntArray("include");
         initViews();
-        baseImageHandler();
+
         //updateProgressBar();
         textview.setText("Number of images we're using: " + dirImages.size());
         toptextview.setText("Use Slider to Select Tile Size");
         blendtextview.setText("Set Blend Between Base Image and Tiles");
+
+        new getBitmapFromURL().execute();
 
         //baseImage = Bitmap.createBitmap(baseImage, 0,0,baseImage.getWidth(), baseImage
         // .getHeight(), matrix, true);
@@ -264,17 +268,37 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         }
     }
 
-    private Bitmap getBitmapFromURL(String src) {
-        try {
-            URL url = new URL(src);
-            HttpURLConnection connection = (HttpURLConnection) url
-                    .openConnection();
-            connection.setDoInput(true);
-            connection.connect();
-            return BitmapFactory.decodeStream(connection.getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+    private class getBitmapFromURL extends AsyncTask<Void, Void, Boolean> {
+
+        public getBitmapFromURL() {
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            try {
+                Log.e("Runinng", "running");
+                URL url = new URL(baseImageURI);
+                HttpURLConnection connection = (HttpURLConnection) url
+                        .openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                baseImage = BitmapFactory.decodeStream(connection.getInputStream());
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean b) {
+            if (b) {
+                baseImageHandler();
+            } else {
+                Toast.makeText(getApplicationContext(), "Couldn't retrieve anything from " +
+                        "the facebook. Sorry!", Toast.LENGTH_SHORT).show();
+            }
+
         }
     }
 
