@@ -2,6 +2,7 @@ package com.finalproject.mosapp;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,6 +24,8 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -62,12 +65,14 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         //byte[] baseArray = bundle.getByteArray("image");
         //baseImage = BitmapFactory.decodeByteArray(baseArray, 0, baseArray.length);
         baseImageURI = bundle.getString("URI");
+        baseImage = getBitmapFromURL(baseImageURI);
         //float[] mValues = bundle.getFloatArray("matrix");
         //matrix = new Matrix();
         //matrix.setValues(mValues);
         dirImages = MainActivity2.imagesToUse;
         //includeArray = bundle.getIntArray("include");
         initViews();
+        baseImageHandler();
         //updateProgressBar();
         textview.setText("Number of images we're using: " + dirImages.size());
         toptextview.setText("Use Slider to Select Tile Size");
@@ -104,23 +109,20 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         saveButton = (Button) findViewById(R.id.button2);
         saveButton.setOnClickListener(this);
 
-        baseImageHandler();
-
         checkBox = (CheckBox) findViewById(R.id.blendcheckbox);
         checkBox.setChecked(true);
 
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    if (isChecked) {
-                        noneCheckBox.setChecked(false);
-                        blendseekBar.setEnabled(false);
-                        blendseekBar.setProgress((int) (100.0 - calcOptimalBlend()));
-                    }
-                    else
-                        blendseekBar.setEnabled(true);
-                }
-            }
+                                                @Override
+                                                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                                    if (isChecked) {
+                                                        noneCheckBox.setChecked(false);
+                                                        blendseekBar.setEnabled(false);
+                                                        blendseekBar.setProgress((int) (100.0 - calcOptimalBlend()));
+                                                    } else
+                                                        blendseekBar.setEnabled(true);
+                                                }
+                                            }
         );
 
         noneCheckBox = (CheckBox) findViewById(R.id.nonecheckbox);
@@ -262,11 +264,24 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         }
     }
 
+    private Bitmap getBitmapFromURL(String src) {
+        try {
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url
+                    .openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            return BitmapFactory.decodeStream(connection.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private double calcOptimalBlend()
     {
         return 100.0* (1f - (0.51605 * Math.exp(-0.031596 * dirImages.size())) );
     }
-
 
     private void writeFile(Bitmap bmp)
     {

@@ -387,15 +387,6 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
 
     private void gridImageHandler(String url) {
         photoUrls.add(url);
-        /**
-         View v = new ImageView(getBaseContext());
-         ImageView imgView;
-         imgView = new ImageView(v.getContext());
-
-         imageLoader.displayImage(url, imgView);
-         imgView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-         imgView.setAdjustViewBounds(true);
-         */
         imageLoader.loadImage(url, new SimpleImageLoadingListener() {
             @Override
             public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
@@ -404,10 +395,6 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                 adapter.add(loadedImage, adapter.getItemCount());
             }
         });
-
-        Log.e("Null check", "adapter is null: " + (adapter == null));
-
-
         //adapter.add(((BitmapDrawable) imgView.getDrawable()).getBitmap(), adapter.getItemCount());
     }
 
@@ -451,8 +438,6 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                                                     public void onCompleted(GraphResponse response) {
                                                         try {
                                                             String photoURL = response.getJSONObject().getString("picture");
-                                                            Log.d(TAG, photoUrls.size() + ":"
-                                                                    + photoURL);
                                                             gridImageHandler(photoURL);
                                                         } catch (Exception e) {
                                                             e.printStackTrace();
