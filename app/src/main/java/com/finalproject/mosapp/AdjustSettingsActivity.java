@@ -9,8 +9,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
@@ -33,13 +37,15 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
     int mProgressStatus = 0;
     ProgressBar progressBar;
     Handler mHandler = new Handler();
-    SeekBar seekBar;
-    TextView textview;
+    SeekBar seekBar, blendseekBar;
+    TextView textview, toptextview, blendtextview;
+    CheckBox checkBox;
     ImageView imageView;
     ZoomInZoomOut zoomer;
     Button button;
     MosaicBuilder builder;
     Worker worker;
+    double tileSize=50.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +65,9 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         initViews();
         //updateProgressBar();
         textview.setText("Number of images we're using: " + dirImages.size());
+        toptextview.setText("Use Slider to Select Tile Size");
+        blendtextview.setText("Set Blend Between Base Image and Tiles");
+
         //baseImage = Bitmap.createBitmap(baseImage, 0,0,baseImage.getWidth(), baseImage
         // .getHeight(), matrix, true);
 
@@ -74,11 +83,30 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         progressBar = (ProgressBar) findViewById(R.id.progressbar);
         //progressBar.setMax(6000);
         seekBar = (SeekBar) findViewById(R.id.seekbar);
+        seekBar.setProgress( (int) tileSize );
+
+        blendseekBar = (SeekBar) findViewById(R.id.blendseekbar);
+        blendseekBar.setProgress((int) calcOptimalBlend());
+        blendseekBar.setEnabled(false);
+
         textview = (TextView) findViewById(R.id.textview);
+        toptextview = (TextView) findViewById(R.id.toptextview);
+        blendtextview = (TextView) findViewById(R.id.blendtextview);
         imageView = (ImageView) findViewById(R.id.imageview);
         button = (Button) findViewById(R.id.button);
         button.setOnClickListener(this);
         baseImageHandler();
+
+        checkBox = (CheckBox) findViewById(R.id.blendcheckbox);
+        checkBox.setChecked(true);
+
+        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView,boolean isChecked) {
+                blendseekBar.setEnabled(!isChecked);
+                }
+            }
+        );
 
         //imageView.setImageBitmap(baseImage);
         //imageView.setImageMatrix(matrix);
@@ -149,6 +177,8 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
     @Override
     public void onClick(View v) {
         int id = v.getId();
+        tileSize = 100.0  + 1.0* seekBar.getProgress();
+        System.out.println(tileSize);
         if (id == R.id.button) {
             MosaicBuilderOptions options = new MosaicBuilderOptions(false);
             worker = new Worker();
@@ -162,13 +192,15 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
                 }
             };
             Log.e("Size", seekBar.getProgress() + "");
-            builder = new MosaicBuilder(getApplicationContext(),  100.0 ,baseImage,dirImages,
+            builder = new MosaicBuilder(getApplicationContext(),  tileSize ,baseImage,dirImages,
                     worker);
             builder.setOptions(options);
             builder.execute();
 
         }
     }
+
+
 
     private String writeFile(Bitmap bmp) {
         File outputDir = getCacheDir(); // context being the Activity pointer
@@ -185,5 +217,10 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
             System.out.println("Error writing file");
         }
         return path;
+    }
+
+    private double calcOptimalBlend()
+    {
+        return 100.0* (1f - (0.51605 * Math.exp(-0.031596 * dirImages.size())) );
     }
 }
