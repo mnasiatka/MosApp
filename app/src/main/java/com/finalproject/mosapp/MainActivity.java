@@ -49,7 +49,9 @@ import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -62,6 +64,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -112,6 +115,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int numPhotoIDs = 1;
     Double minSliderVal = initialMin;
     String baseImageUrl = "";
+    GraphRequest FBasync;
+    ImageLoader imageLoader;
+    public static Set<Integer> includePhoto;
 
     public static Matrix matrix, savedMatrix;
 
@@ -193,6 +199,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
+    private void resetRecyclerView() {
+        photoUrls = new ArrayList<>();
+        dirImages = new ArrayList<>();
+        dirImages2 = new ArrayList<>();
+
+        setupAdapter();
+    }
+
     private void baseImageHandler(String url) {
         baseImageUrl = url;
         ImageLoader imageLoader = ImageLoader.getInstance();
@@ -207,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (at == null) {
             mLoginButton.callOnClick();
         } else {
-
+            // Gets profile picture
             System.out.println("****************************************************");
             Log.e("Application ID", at.getApplicationId());
             Log.e("Token", at.getToken());
@@ -248,7 +262,101 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             request.setParameters(parameters);
             Log.e("Request url", request.toString());
             request.executeAsync();
+
+            // Gets album photos
+            String albumURL = String.format("/%s/photos", at.getUserId());
+            FBasync = new GraphRequest(
+                    AccessToken.getCurrentAccessToken(),
+                    albumURL,
+                    null,
+                    HttpMethod.GET,
+                    new GraphRequest.Callback() {
+                        public void onCompleted(GraphResponse response) {
+                            try {
+                                if (response == null) {
+                                    Log.e(TAG, "Response is null");
+                                } else {
+                                    Log.d(TAG, response.getConnection().getURL().toString());
+                                    JSONArray arr = response.getJSONObject().getJSONArray
+                                            ("data");
+                                    String photoID = "";
+                                    numPhotoIDs = arr.length();
+                                    for (int i = 0; i < arr.length(); i++) {
+                                        photoID = arr.getJSONObject(i).getString("id");
+                                        Log.e("PhotoID", "Index " + i + " produced " + photoID);
+                                        GraphRequest request = new GraphRequest(
+                                                AccessToken.getCurrentAccessToken(),
+                                                photoID,
+                                                null,
+                                                HttpMethod.GET,
+                                                new GraphRequest.Callback() {
+                                                    public void onCompleted(GraphResponse response) {
+                                                        try {
+                                                            String photoURL = response.getJSONObject().getString("picture");
+                                                            Log.d(TAG, photoUrls.size() + ":"
+                                                                    + photoURL);
+                                                            gridImageHandler(photoURL);
+                                                        } catch (Exception e) {
+                                                            e.printStackTrace();
+                                                        }
+                                                    }
+                                                }
+                                        );
+                                        Bundle parameters = new Bundle();
+                                        parameters.putString("fields", "id,name,link,picture");
+                                        request.setParameters(parameters);
+                                        request.executeAsync();
+                                    }
+                                }
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+            );
+            FBasync.executeAsync();
+
+
+
+
         }
+    }
+
+    private void gridImageHandler(Bitmap bmp) {
+       // dirImages2.add(bmp);
+        View v = new ImageView(getBaseContext());
+        ImageView imgView;
+        imgView = new ImageView(v.getContext());
+        imgView.setImageBitmap(bmp);
+        imgView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        imgView.setAdjustViewBounds(true);
+
+        includePhoto.add(adapter.getItemCount());
+        adapter.add(bmp, adapter.getItemCount());
+    }
+
+    private void gridImageHandler(String[] urls) {
+        for (String url : urls) {
+            gridImageHandler(url);
+        }
+    }
+
+    private void gridImageHandler(String url) {
+        photoUrls.add(url);
+        imageLoader.loadImage(url, new SimpleImageLoadingListener() {
+            @Override
+            public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+                //dirImages2.add(loadedImage);
+                includePhoto.add(adapter.getItemCount());
+                adapter.add(loadedImage, adapter.getItemCount());
+            }
+        });
+
+        Log.e("Null check", "adapter is null: " + (adapter == null));
+
+
+        //adapter.add(((BitmapDrawable) imgView.getDrawable()).getBitmap(), adapter.getItemCount());
     }
 
     private class getFacebookData2 extends AsyncTask<String, Void, String> {
@@ -301,7 +409,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mApp.setListener(new InstagramApp.OAuthAuthenticationListener() {
             @Override
             public void onSuccess() {
-                mApp.getUserName();
+                Log.e("username", mApp.getUserName());
+                getInstagramInfo();
             }
 
             @Override
@@ -374,9 +483,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     byte[] byteArray = stream.toByteArray();
                     i.putExtra("image", byteArray);
                     startActivity(i);
-                } else {
-                    Toast.makeText(getApplicationContext(), "Pick a base image first!", Toast
-                            .LENGTH_SHORT).show();
+                } else if (imageBitmap != null) {
+                    Intent i = new Intent(getApplicationContext(), MainActivity2.class);
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    byte[] byteArray = stream.toByteArray();
+                    i.putExtra("image", byteArray);
+                    startActivity(i);
                 }
                 break;
             case R.id.choose_images:
@@ -715,7 +828,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void onImageChosen() {
-        zoomer = new ZoomInZoomOut(getApplicationContext(),ivBaseImage);
+        //zoomer = new ZoomInZoomOut(getApplicationContext(),ivBaseImage);
     }
 
     private String streamToString(InputStream is) throws IOException {
