@@ -128,7 +128,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
     String minText = "Speed";
     String maxText = "Images";
     public Set<Integer> includePhoto;
-    public ArrayList<Bitmap> imagesToUse;
+    public static ArrayList<Bitmap> imagesToUse;
 
     int expectedSize = 25;
     //int TAKE_PHOTO = 1;

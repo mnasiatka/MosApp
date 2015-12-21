@@ -64,7 +64,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         //float[] mValues = bundle.getFloatArray("matrix");
         //matrix = new Matrix();
         //matrix.setValues(mValues);
-        //dirImages = MainActivity2.imagesToUse;
+        dirImages = MainActivity2.imagesToUse;
         //includeArray = bundle.getIntArray("include");
         initViews();
         //updateProgressBar();
