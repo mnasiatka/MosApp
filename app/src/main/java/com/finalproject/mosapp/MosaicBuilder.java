@@ -106,9 +106,10 @@ public class MosaicBuilder {
     private void resizeBaseImage() {
         System.out.println("resizing base image");
         Log.e("Base Image", "" + (baseImage == null));
-        //baseImage = Bitmap.createScaledBitmap(baseImage, Math.round(baseImage.getWidth() *
-        //        resizeScale), Math.round(baseImage
-        //        .getHeight() * resizeScale), true);
+        if( baseImage.getWidth() * baseImage.getHeight() < 300*300)
+            baseImage = Bitmap.createScaledBitmap(baseImage, Math.round(baseImage.getWidth() *
+                    resizeScale), Math.round(baseImage
+                    .getHeight() * resizeScale), true);
     }
 
     public void execute() {
@@ -227,6 +228,8 @@ public class MosaicBuilder {
                 B = ((int) Math.round((stitchedRGB & 0xff) * weight) + (int) Math.round((
                         baseRGB & 0xff) * (1 - weight))) & 0xff;
                 pixel = (R << 16) | (G << 8) | B;
+
+                //System.out.println(R +"," + G +"," +B+","+pixel);
 
                 stitched.setPixel(i, j, pixel);
             }

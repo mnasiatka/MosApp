@@ -3,7 +3,10 @@ package com.finalproject.mosapp;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -35,7 +38,7 @@ import java.util.Date;
 
 public class AdjustSettingsActivity extends AppCompatActivity implements View.OnClickListener {
 
-    Bitmap baseImage;
+    Bitmap baseImage, baseImageGrid;
     Matrix matrix;
     ArrayList<Bitmap> dirImages;
     int[] includeArray;
@@ -99,6 +102,29 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         seekBar = (SeekBar) findViewById(R.id.seekbar);
         seekBar.setProgress((int) tileSize);
 
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                baseImageGrid = addGridLines(baseImage);
+                baseImageHandler(baseImageGrid);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                baseImageGrid = addGridLines(baseImage);
+                baseImageHandler(baseImageGrid);
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                baseImageGrid = addGridLines(baseImage);
+                baseImageHandler(baseImageGrid);
+            }
+        });
+
+
         blendseekBar = (SeekBar) findViewById(R.id.blendseekbar);
         blendseekBar.setProgress((int) (100.0 - calcOptimalBlend()));
         blendseekBar.setEnabled(false);
@@ -154,11 +180,17 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
 
     }
 
-    private void baseImageHandler() {
-        imageView.setImageBitmap(baseImage);
-        imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        imageView.setAdjustViewBounds(true);
-        zoomer = new ZoomInZoomOut(getApplicationContext(), imageView);
+    private void baseImageHandler(Bitmap baseImage) {
+        if (imageView.getDrawable() == null) {
+            imageView.setImageBitmap(baseImage);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            imageView.setAdjustViewBounds(true);
+            zoomer = new ZoomInZoomOut(getApplicationContext(), imageView);
+        }
+        else
+        {
+            imageView.setImageBitmap(baseImage);
+        }
     }
 
     private void updateProgressBar() {
@@ -215,7 +247,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        tileSize = 100.0  + 1.0* seekBar.getProgress();
+        tileSize = 50.0  + 1.0* seekBar.getProgress();
         double blendweight = 0.0;
         if (blendseekBar.isEnabled()) {
             blendweight = 1- (blendseekBar.getProgress()/100.0);
@@ -293,7 +325,8 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         @Override
         protected void onPostExecute(Boolean b) {
             if (b) {
-                baseImageHandler();
+                baseImageGrid = addGridLines(baseImage);
+                baseImageHandler(baseImageGrid);
             } else {
                 Toast.makeText(getApplicationContext(), "Couldn't retrieve anything from " +
                         "the facebook. Sorry!", Toast.LENGTH_SHORT).show();
@@ -305,6 +338,55 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
     private double calcOptimalBlend()
     {
         return 100.0* (1f - (0.51605 * Math.exp(-0.031596 * dirImages.size())) );
+    }
+
+    private Bitmap addGridLines(Bitmap base)
+    {
+        System.out.println("started adding grid");
+
+        Bitmap output = Bitmap.createBitmap(base.getWidth(), base.getHeight(), Bitmap.Config.RGB_565);
+        Canvas c = new Canvas(output);
+        c.drawBitmap(base, 0, 0, new Paint());
+
+        int size = (int) (50  + seekBar.getProgress() );
+        int nRows = (int) Math.round(size);
+        int nCols = (int) Math.round(size);
+
+        int cellWidth = base.getWidth() / nCols;
+        int cellHeight = base.getHeight() / nRows;
+
+        int r = 0 & 0xff, g = 0 & 0xff, b = 0 & 0xff;
+        int pixel = (r << 16) | (g << 8) | b;
+        System.out.println(pixel);
+        System.out.println("base image size: " + base.getHeight() + ", " + base.getWidth());
+        System.out.println("base image size: " + output.getHeight() + ", " + output.getWidth());
+
+        System.out.println("started adding grid loop");
+
+        int[] pixels = new int[base.getHeight()];
+
+        for (int i=0; i< pixels.length; i++)
+        {
+            pixels[i] = pixel;
+        }
+
+        int offset = 0;
+
+        for (int i=cellWidth; i + offset < base.getWidth(); i+=cellWidth)
+        {
+            output.setPixels(pixels, 0, 1, i + offset , 0, 1 , base.getHeight());
+            offset++;
+        }
+
+        offset  = 0;
+        for (int i=cellHeight; i + offset < base.getHeight(); i+=cellHeight)
+        {
+            output.setPixels(pixels, 0, base.getWidth(), 0, i + offset, base.getWidth(), 1);
+            offset++;
+        }
+
+
+        return output;
     }
 
     private void writeFile(Bitmap bmp)
