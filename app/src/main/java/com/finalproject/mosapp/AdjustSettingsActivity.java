@@ -48,7 +48,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
     Handler mHandler = new Handler();
     SeekBar seekBar, blendseekBar;
     TextView textview, toptextview, blendtextview;
-    CheckBox checkBox, noneCheckBox;
+    CheckBox checkBox, noneCheckBox, gridCheckBox;
     ImageView imageView;
     ZoomInZoomOut zoomer;
     Button button;
@@ -107,20 +107,32 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                baseImageGrid = addGridLines(baseImage);
-                baseImageHandler(baseImageGrid);
+                if(gridCheckBox.isChecked()) {
+                    baseImageGrid = addGridLines(baseImage);
+                    baseImageHandler(baseImageGrid);
+                } else {
+                    baseImageHandler(baseImage);
+                }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                baseImageGrid = addGridLines(baseImage);
-                baseImageHandler(baseImageGrid);
+                if(gridCheckBox.isChecked()) {
+                    baseImageGrid = addGridLines(baseImage);
+                    baseImageHandler(baseImageGrid);
+                } else {
+                    baseImageHandler(baseImage);
+                }
             }
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                baseImageGrid = addGridLines(baseImage);
-                baseImageHandler(baseImageGrid);
+                if(gridCheckBox.isChecked()) {
+                    baseImageGrid = addGridLines(baseImage);
+                    baseImageHandler(baseImageGrid);
+                } else {
+                    baseImageHandler(baseImage);
+                }
             }
         });
 
@@ -138,6 +150,20 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
 
         saveButton = (Button) findViewById(R.id.button2);
         saveButton.setOnClickListener(this);
+
+        gridCheckBox = (CheckBox) findViewById(R.id.gridcheckbox);
+        gridCheckBox.setChecked(true);
+
+        gridCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                                                @Override
+                                                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                                    if (isChecked) {
+                                                        baseImageHandler(baseImageGrid);
+                                                    } else
+                                                        baseImageHandler(baseImage);
+                                                }
+                                            }
+        );
 
         checkBox = (CheckBox) findViewById(R.id.blendcheckbox);
         checkBox.setChecked(true);
@@ -326,7 +352,12 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         protected void onPostExecute(Boolean b) {
             if (b) {
                 baseImageGrid = addGridLines(baseImage);
-                baseImageHandler(baseImageGrid);
+                if(gridCheckBox.isChecked()) {
+                    baseImageHandler(baseImageGrid);
+                } else {
+                    baseImageHandler(baseImage);
+                }
+
             } else {
                 Toast.makeText(getApplicationContext(), "Couldn't retrieve anything from " +
                         "the facebook. Sorry!", Toast.LENGTH_SHORT).show();

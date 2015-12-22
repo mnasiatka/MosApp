@@ -21,15 +21,30 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <SeekBar
-        android:id="@+id/seekbar"
-        android:layout_below="@id/toptextview"
+    <LinearLayout
+        android:id="@+id/linlayouttop"
+        android:layout_below="@+id/toptextview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content">
+
+        <SeekBar
+            android:id="@+id/seekbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.99"/>
+
+        <CheckBox
+            android:id="@+id/gridcheckbox"
+            android:layout_alignParentRight = "true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Grid?" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/blendtextview"
-        android:layout_below="@id/seekbar"
+        android:layout_below="@id/linlayouttop"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
