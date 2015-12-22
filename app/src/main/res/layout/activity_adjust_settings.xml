@@ -88,16 +88,9 @@
         android:id="@+id/button"
         android:text="Build your piece of art :)"
         android:layout_above="@id/textview"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <Button
-        android:id="@+id/button2"
-        android:text="save"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/imageview"
-        android:layout_alignEnd="@+id/imageview" />
 
     <ImageView
         android:layout_below="@id/linlayout"

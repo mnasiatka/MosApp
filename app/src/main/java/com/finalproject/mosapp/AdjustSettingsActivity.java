@@ -26,6 +26,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -55,8 +56,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
     MosaicBuilder builder;
     Worker worker;
     double tileSize=50.0;
-    Button saveButton;
-    Bitmap output_image;
+    public static Bitmap output_image;
     String baseImageURI = "";
 
     @Override
@@ -147,9 +147,6 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         imageView = (ImageView) findViewById(R.id.imageview);
         button = (Button) findViewById(R.id.button);
         button.setOnClickListener(this);
-
-        saveButton = (Button) findViewById(R.id.button2);
-        saveButton.setOnClickListener(this);
 
         gridCheckBox = (CheckBox) findViewById(R.id.gridcheckbox);
         gridCheckBox.setChecked(true);
@@ -296,15 +293,11 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
                     imageView.setImageBitmap(builder.getStitched());
                     output_image = builder.getStitched();
 
-//                    Intent intent = new Intent(getApplicationContext(), FinalActivity.class);
-//
-//                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//                    output_image.compress(Bitmap.CompressFormat.PNG, 100, stream);
-//                    byte[] byteArray = stream.toByteArray();
-//                    intent.putExtra("image", byteArray);
-//                    System.out.println("starting final activity");
-//                    startActivity(intent);
-//                    System.out.println("started activity");
+                    Intent intent = new Intent(getApplicationContext(), FinalActivity.class);
+
+                    System.out.println("started activity");
+                    startActivity(intent);
+
                 }
             };
             Log.e("Size", seekBar.getProgress() + "");
@@ -313,17 +306,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
             builder.setOptions(options);
             builder.execute();
         }
-
-        else if (id == R.id.button2) {
-            if(output_image == null)
-            {
-                System.out.println("bitmap is null");
-            }
-            else {
-                writeFile(output_image);
-            }
-
-        }
+        
     }
 
     private class getBitmapFromURL extends AsyncTask<Void, Void, Boolean> {
@@ -420,36 +403,4 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         return output;
     }
 
-    private void writeFile(Bitmap bmp)
-    {
-
-
-        try {
-            String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmm").format(new Date());
-            String path = ("IM_" + timeStamp );
-            String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "mosaic";
-
-            File outputDir= new File(dir);
-
-            outputDir.mkdirs();
-            File newFile = new File(dir+"/"+path+"-"+".jpg");
-            FileOutputStream out = new FileOutputStream(newFile);
-            bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
-
-            out.close();
-            System.out.println("saved image to : " + newFile.toString());
-
-            Intent mediaScanIntent = new Intent(
-                    Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            Uri contentUri = Uri.fromFile(newFile);
-            mediaScanIntent.setData(contentUri);
-            getApplicationContext().sendBroadcast(mediaScanIntent);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-
-    }
 }

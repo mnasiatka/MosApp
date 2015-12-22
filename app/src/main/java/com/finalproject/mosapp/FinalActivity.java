@@ -12,6 +12,8 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
@@ -25,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 
-public class FinalActivity extends ActionBarActivity {
+public class FinalActivity extends ActionBarActivity implements View.OnClickListener {
 
     Bitmap baseImage;
     Matrix matrix;
@@ -37,6 +39,7 @@ public class FinalActivity extends ActionBarActivity {
     Handler mHandler = new Handler();
     SeekBar seekBar;
     TextView textview;
+    Button saveButton;
 
     ImageView imageView;
     ZoomInZoomOut zoomer;
@@ -53,8 +56,10 @@ public class FinalActivity extends ActionBarActivity {
         System.out.println("unpacking final activity");
 
         Bundle bundle = getIntent().getExtras();
-        byte[] byteArray = bundle.getByteArray("image");
-        baseImage = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+//        byte[] byteArray = bundle.getByteArray("image");
+//        baseImage = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+
+        baseImage = AdjustSettingsActivity.output_image;
 
         System.out.println("unpacked image final activity");
 
@@ -71,6 +76,9 @@ public class FinalActivity extends ActionBarActivity {
 
     private void initViews() {
         imageView = (ImageView) findViewById(R.id.imageview);
+        saveButton = (Button) findViewById(R.id.button);
+
+        saveButton.setOnClickListener(this);
 
     }
 
@@ -112,6 +120,19 @@ public class FinalActivity extends ActionBarActivity {
         return s;
     }
 
+    public void onClick(View v) {
+        int id = v.getId();
+
+        if (id == R.id.button) {
+            if(baseImage != null)
+                writeFile(baseImage);
+            else
+                System.out.println("image is null");
+
+        }
+    }
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -137,14 +158,15 @@ public class FinalActivity extends ActionBarActivity {
 
 
         try {
-            String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmm").format(new Date());
+
+            String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date());
             String path = ("IM_" + timeStamp );
             String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "mosaic";
 
             File outputDir= new File(dir);
 
             outputDir.mkdirs();
-            File newFile = new File(dir+"/"+path+"-"+".jpg");
+            File newFile = new File(dir+"/"+path+".jpg");
             FileOutputStream out = new FileOutputStream(newFile);
             bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
 
