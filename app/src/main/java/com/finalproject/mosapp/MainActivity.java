@@ -238,8 +238,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         adapter = new MainAdapter(this, new ArrayList());
         recyclerView.setAdapter(adapter);
-        selectedPhoto = -1;
-
+        selectedPhoto = 0;
+        ListView ls;
         recyclerView.addOnItemTouchListener(
                 new RecyclerItemClickListener(getApplicationContext(), new RecyclerItemClickListener
                         .OnItemClickListener() {
@@ -503,7 +503,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 System.out.println("base image size in main activity 1: " + imageBitmap.getHeight() + ", " + imageBitmap.getWidth());
                 Intent i = new Intent(getApplicationContext(), MainActivity2.class);
                 i.putExtra("URI",photoURIs.get(selectedPhoto));
-                i.putExtra("source", source);
                 //ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 //imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
                 //byte[] byteArray = stream.toByteArray();
@@ -517,7 +516,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
                 startActivityForResult(intent, CHOOSE_MULTIPLE_PHOTOS);
-                source = USING_BITMAPS;
                 onImageChosen();
                 break;
             case R.id.fb_images:
@@ -939,7 +937,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         EditText etAddItem;
     }
 
-
     private class getInstagramInfo extends AsyncTask<String, Void, String[]> {
 
         public getInstagramInfo() {
@@ -1011,13 +1008,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
     public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder> {
 
         private Context mContext;
         private Activity mActivity;
         private List<Bitmap> mDataSet;
         private Map<Integer,ViewHolder> mHolderSet;
+        private boolean firstImageHasAlreadyBeenLoadedInitially = false;
 
         public MainAdapter(Context context, List<Bitmap> dataSet) {
             mContext = context;
@@ -1034,9 +1031,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onBindViewHolder(final ViewHolder holder, final int position) {
             //Picasso.with(mContext).load(R.drawable.loading).into(holder.image);
-
             holder.bmp = mDataSet.get(position);
             holder.image.setImageBitmap(mDataSet.get(position));
+
             if (selectedPhoto == position) { // should include, show check
                 holder.include.setImageResource(R.drawable.check2);
                 holder.include.setVisibility(View.VISIBLE);
