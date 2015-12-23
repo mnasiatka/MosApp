@@ -776,13 +776,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (cp != null) {
 
                     try {
-                        ClipData.Item item = cp.getItemAt(0);
-                        imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), item
-                                .getUri());
-                        //imageBitmap = Bitmap.createScaledBitmap(bmp, 150, 150, false);
-                        //ivBaseImage.setImageBitmap(imageBitmap);
-                        gridImageHandler(imageBitmap);
-                        Log.e("ClipData Item", item.getUri().toString());
+                        ClipData.Item item;
+                        for (int i = 0;i < cp.getItemCount();i++) {
+                            item = cp.getItemAt(i);
+                            imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), item
+                                    .getUri());
+                            //imageBitmap = Bitmap.createScaledBitmap(bmp, 150, 150, false);
+                            //ivBaseImage.setImageBitmap(imageBitmap);
+                            gridImageHandler(i,item.getUri().toString());
+                            Log.e("ClipData Item", item.getUri().toString());
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -794,7 +797,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),
                                     data.getData());
                             //imageBitmap = Bitmap.createScaledBitmap(bmp, 150, 150, false);
-                            gridImageHandler(imageBitmap);
+                            gridImageHandler(0, data.getData().toString());
                             Log.e("getData Item", data.getData().toString());
                         } catch (Exception e) {
                             e.printStackTrace();
