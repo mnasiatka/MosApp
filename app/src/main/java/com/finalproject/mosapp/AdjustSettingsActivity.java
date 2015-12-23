@@ -306,7 +306,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
             builder.setOptions(options);
             builder.execute();
         }
-        
+
     }
 
     private class getBitmapFromURL extends AsyncTask<Void, Void, Boolean> {
