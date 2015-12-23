@@ -114,7 +114,9 @@ public class MosaicBuilder {
 
     public void execute() {
         //loadBaseImage();
-        //resizeBaseImage();
+
+        if(baseImage.getWidth()*baseImage.getHeight() < 500*500)
+            resizeBaseImage();
 
         sliceBase();
         compDist();
