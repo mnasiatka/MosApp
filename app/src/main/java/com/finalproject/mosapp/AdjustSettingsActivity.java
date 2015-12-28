@@ -350,7 +350,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
 
         @Override
         protected void onPostExecute(Boolean b) {
-            if (!b) {
+            if (b) {
                 baseImageGrid = addGridLines(baseImage);
                 if(gridCheckBox.isChecked()) {
                     baseImageHandler(baseImageGrid);
@@ -359,7 +359,6 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
                 }
 
             } else {
-                baseImageHandler(baseImage);
                 Toast.makeText(getApplicationContext(), "Couldn't retrieve anything from " +
                         "the facebook. Sorry!", Toast.LENGTH_SHORT).show();
             }
@@ -397,22 +396,25 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
 
         int[] pixels = new int[base.getHeight()];
 
-        for (int i=0; i< pixels.length; i++)
-        {
+        for (int i=0; i< pixels.length; i++) {
             pixels[i] = pixel;
         }
 
         int offset = 0;
 
-        for (int i=cellWidth; i + offset < base.getWidth(); i+=cellWidth)
-        {
+        Log.e("Base dimensions", "width=" + base.getWidth() + ", height=" + base.getHeight());
+
+        System.out.println("Width******************************");
+        for (int i=cellWidth; i + offset < base.getWidth(); i+=cellWidth) {
+            System.out.println(i);
             output.setPixels(pixels, 0, 1, i + offset , 0, 1 , base.getHeight());
             offset++;
         }
 
+        System.out.println("Height******************************");
         offset  = 0;
-        for (int i=cellHeight; i + offset < base.getHeight(); i+=cellHeight)
-        {
+        for (int i=cellHeight; i + offset < base.getHeight(); i+=cellHeight) {
+            System.out.println(i);
             output.setPixels(pixels, 0, base.getWidth(), 0, i + offset, base.getWidth(), 1);
             offset++;
         }
