@@ -89,13 +89,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static String INSTAGRAM_ACCESS_TOKEN = "";
     private static String INSTAGRAM_USER_ID = "";
 
-    public static int source = -1;
-    public static int USING_INSTAGRAM = 0;
-    public static int USING_FACEBOOK = 1;
-    public static int USING_FLICKR = 2;
-    public static int USING_GALLERY = 3;
-    public static int USING_URLS = 0;
-    public static int USING_BITMAPS = 1;
+    private int source = -1;
+    private final static int USING_INSTAGRAM = 0;
+    private final static int USING_FACEBOOK = 1;
+    private final static int USING_FLICKR = 2;
+    private final static int USING_GALLERY = 3;
+    private final static int USING_URLS = 0;
+    private final static int USING_BITMAPS = 1;
 
 
     public static ImageView ivBaseImage;
@@ -340,6 +340,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                     public void onCompleted(GraphResponse response) {
                                                         try {
                                                             String photoURL = response.getJSONObject().getString("picture");
+                                                            source = USING_FACEBOOK;
                                                             gridImageHandler(index, photoURL);
                                                         } catch (Exception e) {
                                                             e.printStackTrace();
@@ -503,6 +504,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 System.out.println("base image size in main activity 1: " + imageBitmap.getHeight() + ", " + imageBitmap.getWidth());
                 Intent i = new Intent(getApplicationContext(), MainActivity2.class);
                 i.putExtra("URI",photoURIs.get(selectedPhoto));
+                i.putExtra("base_source", source);
                 //ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 //imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
                 //byte[] byteArray = stream.toByteArray();
@@ -738,6 +740,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                source = USING_GALLERY;
                 gridImageHandler(imageBitmap);
             } else if (requestCode == TAKE_PHOTO) {
                 //Bundle extras = imageReturnedIntent.getExtras();
@@ -763,6 +766,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                    Log.e("SIZE", "Width: " + imageBitmap.getWidth() + ", Height: " + imageBitmap
 //                            .getHeight());
 //                    imageBitmap = Bitmap.createScaledBitmap(imageBitmap, newWidth, newHeight, false);
+                    source = USING_GALLERY;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -804,7 +808,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     }
                 }
-
+                source = USING_GALLERY;
             } else {
                 callbackManager.onActivityResult(requestCode, resultCode, data);
             }
@@ -1002,6 +1006,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         protected void onPostExecute(String[] photoUrls) {
             if (photoUrls != null) {
                 resetRecyclerView();
+                source = USING_INSTAGRAM;
                 gridImageHandler(photoUrls);
             } else {
                 Toast.makeText(getApplicationContext(), "Couldn't retrieve anything from " +

@@ -92,12 +92,13 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
     private static String INSTAGRAM_ACCESS_TOKEN = "";
     private static String INSTAGRAM_USER_ID = "";
 
-    public static int USING_INSTAGRAM = 0;
-    public static int USING_FACEBOOK = 1;
-    public static int USING_FLICKR = 2;
-    public static int USING_GALLERY = 3;
-
-    public static int source = -1;
+    private int source = -1;
+    private final static int USING_INSTAGRAM = 0;
+    private final static int USING_FACEBOOK = 1;
+    private final static int USING_FLICKR = 2;
+    private final static int USING_GALLERY = 3;
+    private final static int USING_URLS = 0;
+    private final static int USING_BITMAPS = 1;
 
     String TAG = "DEBUG";
     ArrayList<String> dirImages;
@@ -129,6 +130,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
     public Set<Integer> includePhoto;
     public static ArrayList<Bitmap> imagesToUse;
 
+    int base_source = -1;
     int expectedSize = 25;
     //int TAKE_PHOTO = 1;
     int CHOOSE_PHOTO = 2;
@@ -166,7 +168,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
             //byte[] byteArray = getIntent().getByteArrayExtra("image");
             //imageBitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
             baseImageURI = getIntent().getExtras().getString("URI");
-
+            base_source = getIntent().getExtras().getInt("base_source");
         } catch (Exception e) {
             e.printStackTrace();
             finish();
@@ -366,6 +368,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
     }
 
     private void gridImageHandler(Bitmap bmp) {
+        includePhoto.add(adapter.getItemCount());
         adapter.add(bmp, adapter.getItemCount());
     }
 
@@ -428,6 +431,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                                                     public void onCompleted(GraphResponse response) {
                                                         try {
                                                             String photoURL = response.getJSONObject().getString("picture");
+                                                            source = USING_FACEBOOK;
                                                             gridImageHandler(photoURL);
                                                         } catch (Exception e) {
                                                             e.printStackTrace();
@@ -570,7 +574,8 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                 //intent.putExtra("image", byteArray);
 
                 intent.putExtra("URI", baseImageURI);
-
+                intent.putExtra("source",source);
+                intent.putExtra("base_source", base_source);
                 imagesToUse = new ArrayList<>(includePhoto.size());
                 ByteArrayOutputStream dirStream = new ByteArrayOutputStream();
                 byte[] dirArray;
@@ -782,6 +787,9 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                             bmp = Bitmap.createScaledBitmap(bmp, 150, 150, false);
                             Log.e("ClipData Item", path);
                             dirImages.add(path);
+                            photoUrls.add(path);
+                            dirImages2.add(bmp);
+                            source = USING_GALLERY;
                             gridImageHandler(bmp);
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -792,12 +800,16 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                     if (data.getData() != null) {
                         try {
                             for (int i = 0; i < cp.getItemCount(); i++) {
-                                bmp = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
+                                bmp = MediaStore.Images.Media.getBitmap(this.getContentResolver
+                                        (), data.getData());
                                 bmp = Bitmap.createScaledBitmap(bmp, 150, 150, false);
                                 Log.e("getData Item", data.getData().toString());
                                 System.out.println(this.getContentResolver() + " " + data.getData());
                                 String path = getRealPathFromURI(getApplicationContext(), cp.getItemAt(0).getUri());
                                 dirImages.add(path);
+                                photoUrls.add(path);
+                                dirImages2.add(bmp);
+                                source = USING_GALLERY;
                                 gridImageHandler(bmp);
                             }
                         } catch (Exception e) {
@@ -1020,6 +1032,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
             if (photoUrls != null) {
                 resetScrollView();
                 resetRecyclerView();
+                source = USING_INSTAGRAM;
                 gridImageHandler(photoUrls);
             } else {
                 Toast.makeText(getApplicationContext(), "Couldn't retrieve anything from " +

@@ -1,17 +1,17 @@
 package com.finalproject.mosapp;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -26,15 +26,10 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 
 public class AdjustSettingsActivity extends AppCompatActivity implements View.OnClickListener {
@@ -43,6 +38,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
     Matrix matrix;
     ArrayList<Bitmap> dirImages;
     int[] includeArray;
+    Context mContext;
 
     int mProgressStatus = 0;
     ProgressBar progressBar;
@@ -59,6 +55,15 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
     public static Bitmap output_image;
     String baseImageURI = "";
 
+    private int base_source = -1;
+    private int source = -1;
+    private final static int USING_INSTAGRAM = 0;
+    private final static int USING_FACEBOOK = 1;
+    private final static int USING_FLICKR = 2;
+    private final static int USING_GALLERY = 3;
+    private final static int USING_URLS = 0;
+    private final static int USING_BITMAPS = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,12 +75,14 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         //byte[] baseArray = bundle.getByteArray("image");
         //baseImage = BitmapFactory.decodeByteArray(baseArray, 0, baseArray.length);
         baseImageURI = bundle.getString("URI");
-
+        source = bundle.getInt("source");
+        base_source = bundle.getInt("base_source");
         //float[] mValues = bundle.getFloatArray("matrix");
         //matrix = new Matrix();
         //matrix.setValues(mValues);
         dirImages = MainActivity2.imagesToUse;
         //includeArray = bundle.getIntArray("include");
+        mContext = getApplicationContext();
         initViews();
 
         //updateProgressBar();
@@ -294,14 +301,13 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
                     output_image = builder.getStitched();
 
                     Intent intent = new Intent(getApplicationContext(), FinalActivity.class);
-
                     System.out.println("started activity");
                     startActivity(intent);
 
                 }
             };
             Log.e("Size", seekBar.getProgress() + "");
-            builder = new MosaicBuilder(getApplicationContext(),  tileSize ,baseImage, blendweight, dirImages,
+            builder = new MosaicBuilder(getApplicationContext(), tileSize ,baseImage, blendweight, dirImages,
                     worker);
             builder.setOptions(options);
             builder.execute();
@@ -316,24 +322,35 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            try {
-                Log.e("Runinng", "running");
-                URL url = new URL(baseImageURI);
-                HttpURLConnection connection = (HttpURLConnection) url
-                        .openConnection();
-                connection.setDoInput(true);
-                connection.connect();
-                baseImage = BitmapFactory.decodeStream(connection.getInputStream());
+            Log.e("Source", base_source + ":" + source);
+            if (base_source != USING_GALLERY) {
+                try {
+                    Log.e("Runinng", "running");
+                    URL url = new URL(baseImageURI);
+                    HttpURLConnection connection = (HttpURLConnection) url
+                            .openConnection();
+                    connection.setDoInput(true);
+                    connection.connect();
+                    baseImage = BitmapFactory.decodeStream(connection.getInputStream());
+                    return true;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            } else {
+                try {
+                    baseImage = MediaStore.Images.Media.getBitmap(getContentResolver(),
+                            Uri.parse(baseImageURI));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 return true;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
             }
         }
 
         @Override
         protected void onPostExecute(Boolean b) {
-            if (b) {
+            if (!b) {
                 baseImageGrid = addGridLines(baseImage);
                 if(gridCheckBox.isChecked()) {
                     baseImageHandler(baseImageGrid);
@@ -342,6 +359,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
                 }
 
             } else {
+                baseImageHandler(baseImage);
                 Toast.makeText(getApplicationContext(), "Couldn't retrieve anything from " +
                         "the facebook. Sorry!", Toast.LENGTH_SHORT).show();
             }
