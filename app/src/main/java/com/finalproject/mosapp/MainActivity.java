@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         
         getSupportActionBar().setTitle("1. Pick the base image");
 
-        Toast.makeText(getApplicationContext(),"Main Activity",Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(),"Main Activity",Toast.LENGTH_SHORT).show();
 
     }
 
@@ -255,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                         ImageView include = (ImageView) view.findViewById(R.id.include);
                         ImageView image = (ImageView) view.findViewById(R.id.image);
-                        if (selectedPhoto == position ) { // already checked, remove and show x
+                        if (selectedPhoto == position) { // already checked, remove and show x
                             include.setImageResource(R.drawable.xcheck);
                             include.setVisibility(View.GONE);
                             image.setAlpha(.7f);
@@ -408,6 +408,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
         //adapter.add(((BitmapDrawable) imgView.getDrawable()).getBitmap(), adapter.getItemCount());
     }
+
 
     private class getFacebookData2 extends AsyncTask<String, Void, String> {
 

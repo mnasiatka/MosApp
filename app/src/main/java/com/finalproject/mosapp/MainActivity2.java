@@ -163,7 +163,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
 
         //matrix = MainActivity.matrix;
         //matrix.getValues(mValues);
-        Toast.makeText(getApplicationContext(), "Main Activity 2", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(), "Main Activity 2", Toast.LENGTH_SHORT).show();
         try {
             //byte[] byteArray = getIntent().getByteArrayExtra("image");
             //imageBitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);

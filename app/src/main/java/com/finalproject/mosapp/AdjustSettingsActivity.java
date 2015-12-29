@@ -32,7 +32,8 @@ import java.net.URL;
 import java.util.ArrayList;
 
 
-public class AdjustSettingsActivity extends AppCompatActivity implements View.OnClickListener {
+public class AdjustSettingsActivity extends AppCompatActivity implements View.OnClickListener,
+        ZoomCallback {
 
     Bitmap baseImage, baseImageGrid;
     Matrix matrix;
@@ -100,6 +101,13 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
         //for (float f : mValues) {
         //    Log.e("Matrix values", "" + f);
         //}
+
+    }
+
+    @Override
+    public void zoomCallback(float level) {
+        int lvl = Math.round(level);
+        Log.e("Zoom Callback", "" + Math.min(lvl,3));
 
     }
 
@@ -215,7 +223,7 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
             imageView.setImageBitmap(baseImage);
             imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             imageView.setAdjustViewBounds(true);
-            zoomer = new ZoomInZoomOut(getApplicationContext(), imageView);
+            zoomer = new ZoomInZoomOut(getApplicationContext(), imageView, this);
         }
         else
         {
@@ -295,9 +303,8 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
             worker.callback = new MyCallback() {
 
                 public void callbackCall() {
-                    Log.e("EVENT", "reached " +
-                            "callback!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                    imageView.setImageBitmap(builder.getStitched());
+                    Log.e("EVENT", "reached callback!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    //imageView.setImageBitmap(builder.getStitched());
                     output_image = builder.getStitched();
 
                     Intent intent = new Intent(getApplicationContext(), FinalActivity.class);

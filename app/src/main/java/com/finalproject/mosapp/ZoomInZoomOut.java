@@ -32,9 +32,16 @@ public class ZoomInZoomOut implements OnTouchListener
     ImageView mImageView;
     Context mContext;
 
+    ZoomCallback mCallback;
+
     public ZoomInZoomOut(Context context, ImageView imageView) {
+        this(context, imageView, null);
+    }
+
+    public ZoomInZoomOut(Context context, ImageView imageView, ZoomCallback callback) {
         this.mContext = context;
         this.mImageView = imageView;
+        this.mCallback = callback;
         mImageView.setOnTouchListener(this);
     }
 
@@ -45,7 +52,7 @@ public class ZoomInZoomOut implements OnTouchListener
         view.setScaleType(ImageView.ScaleType.MATRIX);
         float scale;
 
-        dumpEvent(event);
+        //dumpEvent(event);
         // Handle touch events here...
 
         switch (event.getAction() & MotionEvent.ACTION_MASK)
@@ -54,7 +61,7 @@ public class ZoomInZoomOut implements OnTouchListener
                 matrix.set(view.getImageMatrix());
                 savedMatrix.set(matrix);
                 start.set(event.getX(), event.getY());
-                Log.d(TAG, "mode=DRAG"); // write to LogCat
+                //Log.d(TAG, "mode=DRAG"); // write to LogCat
                 mode = DRAG;
                 break;
 
@@ -63,18 +70,21 @@ public class ZoomInZoomOut implements OnTouchListener
             case MotionEvent.ACTION_POINTER_UP: // second finger lifted
 
                 mode = NONE;
-                Log.d(TAG, "mode=NONE");
+                //Log.d(TAG, "mode=NONE");
                 break;
 
             case MotionEvent.ACTION_POINTER_DOWN: // first and second finger down
 
                 oldDist = spacing(event);
-                Log.d(TAG, "oldDist=" + oldDist);
+                //Log.d(TAG, "oldDist=" + oldDist);
                 if (oldDist > 5f) {
                     savedMatrix.set(matrix);
                     midPoint(mid, event);
                     mode = ZOOM;
-                    Log.d(TAG, "mode=ZOOM");
+                    //Log.d(TAG, "mode=ZOOM");
+                    //if (mCallback != null) {
+                    //    mCallback.zoomCallback(0);
+                    //}
                 }
                 break;
 
@@ -89,7 +99,7 @@ public class ZoomInZoomOut implements OnTouchListener
                 {
                     // pinch zooming
                     float newDist = spacing(event);
-                    Log.d(TAG, "newDist=" + newDist);
+                    //Log.d(TAG, "newDist=" + newDist);
                     if (newDist > 5f)
                     {
                         matrix.set(savedMatrix);
@@ -98,6 +108,12 @@ public class ZoomInZoomOut implements OnTouchListener
                         // if scale > 1 means zoom in...
                         // if scale < 1 means zoom out...
                         matrix.postScale(scale, scale, mid.x, mid.y);
+                        if (mCallback != null) {
+                            float[] vals = new float[9];
+                            matrix.getValues(vals);
+                            mCallback.zoomCallback(vals[0]);
+                            //visualMatrix(matrix);
+                        }
                     }
                 }
                 break;
@@ -106,6 +122,14 @@ public class ZoomInZoomOut implements OnTouchListener
         view.setImageMatrix(matrix); // display the transformation on screen
 
         return true; // indicate event was handled
+    }
+
+    private void visualMatrix(Matrix mMatrix) {
+        float[] vals = new float[9];
+        mMatrix.getValues(vals);
+        String s = String.format("Matrix Display\n[%f, %f, %f\n%f, %f, %f\n%f, %f, %f]", vals[0],
+                vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7], vals[8]);
+        Log.e("Values", s);
     }
 
     private float spacing(MotionEvent event)
