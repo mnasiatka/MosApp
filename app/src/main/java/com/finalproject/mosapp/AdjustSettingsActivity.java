@@ -413,6 +413,10 @@ public class AdjustSettingsActivity extends AppCompatActivity implements View.On
 
         System.out.println("Height******************************");
         offset  = 0;
+        pixels = new int[base.getWidth()];
+        for (int i=0; i< pixels.length; i++) {
+            pixels[i] = pixel;
+        }
         for (int i=cellHeight; i + offset < base.getHeight(); i+=cellHeight) {
             System.out.println(i);
             output.setPixels(pixels, 0, base.getWidth(), 0, i + offset, base.getWidth(), 1);

@@ -288,6 +288,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mLoginButton.callOnClick();
         } else {
             // Gets profile picture
+            source = USING_FACEBOOK;
             String profileURL = String.format("/%s/picture", at.getUserId());
             GraphRequest request = new GraphRequest(
                     AccessToken.getCurrentAccessToken(),
@@ -297,6 +298,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     new GraphRequest.Callback() {
                         public void onCompleted(GraphResponse response) {
                             try {
+                                System.out.println("URL=" + response.getConnection().getURL()
+                                        .toString());
                                 baseImageHandler(response.getConnection().getURL().toString());
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -339,9 +342,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                 new GraphRequest.Callback() {
                                                     public void onCompleted(GraphResponse response) {
                                                         try {
-                                                            String photoURL = response.getJSONObject().getString("picture");
-                                                            source = USING_FACEBOOK;
-                                                            gridImageHandler(index, photoURL);
+                                                            String photoURL = response
+                                                                    .getJSONObject().getJSONArray
+                                                                            ("images")
+                                                                    .getJSONObject(0).getString
+                                                                            ("source");
+                                                            /*System.out.println
+                                                                    ("***********************************");
+                                                            System.out.println(response
+                                                                    .getJSONObject().getJSONArray
+                                                                            ("images")
+                                                                    .getJSONObject(0).getString
+                                                                            ("source"));
+                                                            System.out.println(response
+                                                            .getJSONObject().getString("link"));*/
+                                                            gridImageHandler(photoURL);
                                                         } catch (Exception e) {
                                                             e.printStackTrace();
                                                         }
@@ -349,7 +364,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                 }
                                         );
                                         Bundle parameters = new Bundle();
-                                        parameters.putString("fields", "id,name,link,picture");
+                                        parameters.putString("fields", "id,name,link,picture," +
+                                                "images");
                                         parameters.putString("type","large");
                                         request.setParameters(parameters);
                                         request.executeAsync();
@@ -376,17 +392,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void gridImageHandler(String[] urls) {
         for (int i=0;i<urls.length;i++) {
-            gridImageHandler(i,urls[i]);
+            gridImageHandler(urls[i]);
         }
     }
 
-    private void gridImageHandler(int i,String url) {
-        photoURIs.put(i, url);
+    private void gridImageHandler(String url) {
+        photoURIs.put(photoURIs.size(), url);
         imageLoader.loadImage(url, new SimpleImageLoadingListener() {
             @Override
             public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
                 Log.e(imageUri, loadedImage.getWidth() + ", " + loadedImage.getHeight());
                 adapter.add(loadedImage, adapter.getItemCount());
+                Log.e("Size", loadedImage.getWidth() + "," + loadedImage.getHeight());
             }
         });
         //adapter.add(((BitmapDrawable) imgView.getDrawable()).getBitmap(), adapter.getItemCount());
@@ -787,7 +804,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     .getUri());
                             //imageBitmap = Bitmap.createScaledBitmap(bmp, 150, 150, false);
                             //ivBaseImage.setImageBitmap(imageBitmap);
-                            gridImageHandler(i,item.getUri().toString());
+                            gridImageHandler(item.getUri().toString());
                             Log.e("ClipData Item", item.getUri().toString());
                         }
                     } catch (Exception e) {
@@ -801,7 +818,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),
                                     data.getData());
                             //imageBitmap = Bitmap.createScaledBitmap(bmp, 150, 150, false);
-                            gridImageHandler(0, data.getData().toString());
+                            gridImageHandler(data.getData().toString());
                             Log.e("getData Item", data.getData().toString());
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -1041,6 +1058,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //Picasso.with(mContext).load(R.drawable.loading).into(holder.image);
             holder.bmp = mDataSet.get(position);
             holder.image.setImageBitmap(mDataSet.get(position));
+
+            if (selectedView == null) {
+                selectedView = holder.itemView;
+            }
 
             if (selectedPhoto == position) { // should include, show check
                 holder.include.setImageResource(R.drawable.check2);
